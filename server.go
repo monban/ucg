@@ -29,9 +29,7 @@ func (s *server) handleRoot() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		i, err := ioutil.ReadFile("index.html")
 		if err != nil {
-			s.log.Print("404 index.html not found")
-			w.WriteHeader(404)
-			fmt.Fprint(w, "Not found")
+			http.NotFound(w, r)
 			return
 		}
 		fmt.Fprint(w, string(i))
