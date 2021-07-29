@@ -12,6 +12,7 @@ type server struct {
 	router      *http.ServeMux
 	log         *log.Logger
 	gameManager *GameManager
+	rootHandler http.Handler
 }
 
 func newServer(l *log.Logger, gm *GameManager) (*server, error) {
@@ -20,6 +21,7 @@ func newServer(l *log.Logger, gm *GameManager) (*server, error) {
 		router:      http.NewServeMux(),
 		log:         l,
 		gameManager: gm,
+		rootHandler: http.FileServer(http.Dir("www")),
 	}
 	s.routes()
 	return s, nil
