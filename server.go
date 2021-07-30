@@ -45,13 +45,23 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) gameController() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := json.Marshal(s.gameManager.ListGames())
-		if err != nil {
-			http.Error(w, "Error marshaling games", 500)
-			return
+		switch r.Method {
+		case http.MethodGet:
+			data, err := json.Marshal(s.gameManager.ListGames())
+			if err != nil {
+				http.Error(w, "Error marshaling games", 500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, string(data))
+		case http.MethodPost:
+			g,_ := s.gameManager.CreateGame().JsonGameState()
+			if g == nil {
+				http.Error(w, "Unable to create game", 500)
+			}
+			w.WriteHeader(http.StatusCreated)
+			w.Write(g)
 		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(data))
 	}
 }
 
