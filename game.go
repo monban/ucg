@@ -8,6 +8,7 @@ type Game struct {
 	players []*Player
 	rounds  []*Round
 	name    string
+	id      gameId
 }
 
 type ListedGame struct {

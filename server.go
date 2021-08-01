@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 type server struct {
@@ -74,5 +75,15 @@ func (s *server) gameController() http.HandlerFunc {
 	}
 }
 
+func (s *server) urlForGame(id gameId) url.URL {
+	// TODO: Check game with id exists
+	p := fmt.Sprintf("/games/%d", id)
+	u := url.URL{}
+	u.Path = p
+	return u
+}
+
 type cardsRouter struct {
 }
+
+type gameId uint64

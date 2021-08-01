@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -44,5 +45,15 @@ func TestCreateGame(t *testing.T) {
 	json.Unmarshal(body, &bd)
 	if bd.Name != "foo" {
 		t.Errorf("Expected name to be foo, but it was %v", bd.Name)
+	}
+}
+
+func TestUrlForGame(t *testing.T) {
+	s := setupServer()
+	g := s.gameManager.CreateGame("SomeName")
+	expectedPath := fmt.Sprintf("/games/%d", g.id)
+	u := s.urlForGame(g.id)
+	if u.Path != expectedPath {
+		t.Errorf("Expected %v, got %v", expectedPath, u.Path)
 	}
 }
