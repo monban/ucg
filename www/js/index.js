@@ -1,11 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
-	const gameList = document.getElementById('games')
-	document.getElementById('refresh-button').addEventListener('click', (evt) => RefreshGameList(gameList))
-	document.getElementById('create-game-button').addEventListener('click', showCreateGameScreen)
-	document.getElementById('exit-new-game').addEventListener('click', showGameList)
-	document.getElementById('input-button-create-game').addEventListener('click', createGame)
-	RefreshGameList(gameList)
+	bindElements(document)
+	if (isLoggedIn()) {
+		showGameList()
+	} else {
+		hideAllMainsExcept('login')
+	}
 })
+
+function isLoggedIn() {
+	return localStorage.getItem('username') && localStorage.getItem('userid')
+}
+
+function bindElements(root) {
+	gameList = document.getElementById('games')
+	root.getElementById('refresh-button').addEventListener('click', (evt) => RefreshGameList(gameList))
+	root.getElementById('create-game-button').addEventListener('click', showCreateGameScreen)
+	root.getElementById('exit-new-game').addEventListener('click', showGameList)
+	root.getElementById('input-button-create-game').addEventListener('click', createGame)
+	root.getElementById('input-button-create-user').addEventListener('click', createUser)
+}
 
 function CreateGameListEntry(game) {
 	const li = document.createElement('li')
@@ -40,6 +53,7 @@ function showCreateGameScreen() {
 }
 
 function showGameList() {
+	RefreshGameList(gameList)
 	hideAllMainsExcept('game-list')
 }
 
@@ -51,4 +65,19 @@ function createGame() {
 		method: 'POST',
 		body: JSON.stringify(newGameData),
 	}).then(console.log('game created'))
+}
+
+function createUser() {
+	userData = {
+		name: document.getElementById("input-text-user-name").value
+	}
+	fetch('/users', {
+		method: 'POST',
+		body: JSON.stringify(userData),
+	}).then(res => res.json())
+		.then((data) => {
+			localStorage.setItem('username', data.name)
+			localStorage.setItem('userid', data.id)
+			showGameList()
+		})
 }

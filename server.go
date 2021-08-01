@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 )
@@ -15,6 +16,7 @@ type server struct {
 	log         *log.Logger
 	gameManager *GameManager
 	rootHandler http.Handler
+	users       []User
 }
 
 func newServer(l *log.Logger, gm *GameManager) (*server, error) {
@@ -75,6 +77,32 @@ func (s *server) gameController() http.HandlerFunc {
 	}
 }
 
+func (s *server) newUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "You can only POST to this endpoint", http.StatusMethodNotAllowed)
+			return
+		}
+		body, _ := io.ReadAll(r.Body)
+		var pd struct {
+			Name string `json:"name"`
+		}
+		err := json.Unmarshal(body, &pd)
+		if err != nil {
+			http.Error(w, "Invalid format", http.StatusBadRequest)
+			return
+		}
+		u := User{
+			Name: pd.Name,
+			Id:   userId(rand.Uint64()),
+		}
+		s.users = append(s.users, u)
+		rbody, _ := json.Marshal(u)
+		w.WriteHeader(http.StatusCreated)
+		w.Write(rbody)
+	}
+}
+
 func (s *server) urlForGame(id gameId) url.URL {
 	// TODO: Check game with id exists
 	p := fmt.Sprintf("/games/%d", id)
@@ -87,3 +115,9 @@ type cardsRouter struct {
 }
 
 type gameId uint64
+type userId uint64
+
+type User struct {
+	Name string `json:"name"`
+	Id   userId `json:"id"`
+}

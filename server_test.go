@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -55,5 +56,22 @@ func TestUrlForGame(t *testing.T) {
 	u := s.urlForGame(g.id)
 	if u.Path != expectedPath {
 		t.Errorf("Expected %v, got %v", expectedPath, u.Path)
+	}
+}
+
+func TestNewUser(t *testing.T) {
+	s := setupServer()
+	data := strings.NewReader("{\"name\":\"Bob\"}")
+	req := httptest.NewRequest("POST", "/users", data)
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
+	if w.Result().StatusCode != http.StatusCreated {
+		t.Errorf("Expected %v, got %v.", http.StatusCreated, w.Code)
+	}
+	body, _ := io.ReadAll(w.Result().Body)
+	var bd struct{ id userId }
+	err := json.Unmarshal(body, &bd)
+	if err != nil {
+		t.Errorf("Unable to unmarshall %v to playerId", string(body))
 	}
 }
