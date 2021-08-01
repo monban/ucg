@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -55,11 +56,19 @@ func (s *server) gameController() http.HandlerFunc {
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprint(w, string(data))
 		case http.MethodPost:
-			g,_ := s.gameManager.CreateGame().JsonGameState()
+			postData, _ := io.ReadAll(r.Body)
+			var jd newGameData
+			err := json.Unmarshal(postData, &jd)
+			if err != nil {
+				log.Printf("ERROR: failed to unmarshal postData: %v", err.Error())
+			}
+			log.Printf("Creating new game: %v\n", jd)
+			g, _ := s.gameManager.CreateGame(jd.Name).JsonGameState()
 			if g == nil {
 				http.Error(w, "Unable to create game", 500)
 			}
 			w.WriteHeader(http.StatusCreated)
+			s.log.Printf("%v\n", string(g))
 			w.Write(g)
 		}
 	}

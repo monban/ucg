@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('refresh-button').addEventListener('click', (evt) => RefreshGameList(gameList))
 	document.getElementById('create-game-button').addEventListener('click', showCreateGameScreen)
 	document.getElementById('exit-new-game').addEventListener('click', showGameList)
+	document.getElementById('input-button-create-game').addEventListener('click', createGame)
 	RefreshGameList(gameList)
 })
 
@@ -40,4 +41,14 @@ function showCreateGameScreen() {
 
 function showGameList() {
 	hideAllMainsExcept('game-list')
+}
+
+function createGame() {
+	newGameData = {
+		name: document.getElementById("input-text-game-name").value
+	}
+	fetch('/games', {
+		method: 'POST',
+		body: JSON.stringify(newGameData),
+	}).then(console.log('game created'))
 }

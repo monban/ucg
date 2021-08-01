@@ -4,8 +4,8 @@ type GameManager struct {
 	games []*Game
 }
 
-func (gm *GameManager) CreateGame() *Game {
-	g := NewGame()
+func (gm *GameManager) CreateGame(name string) *Game {
+	g := NewGame(name)
 	gm.games = append(gm.games, g)
 	return g
 }
