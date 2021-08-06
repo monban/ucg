@@ -66,13 +66,12 @@ func (s *server) gameController() http.HandlerFunc {
 				log.Printf("ERROR: failed to unmarshal postData: %v", err.Error())
 			}
 			log.Printf("Creating new game: %v\n", jd)
-			g, _ := s.gameManager.CreateGame(jd.Name).JsonGameState()
+			g := s.gameManager.CreateGame(jd.Name)
 			if g == nil {
 				http.Error(w, "Unable to create game", 500)
 			}
 			w.WriteHeader(http.StatusCreated)
-			s.log.Printf("%v\n", string(g))
-			w.Write(g)
+			w.Write(g.JsonGameState())
 		}
 	}
 }

@@ -9,6 +9,7 @@ type Game struct {
 	rounds  []*Round
 	name    string
 	id      gameId
+	owner   *Player
 }
 
 type ListedGame struct {
@@ -40,11 +41,11 @@ func (g *Game) StartNewRound() *Round {
 	return r
 }
 
-func (g *Game) JsonGameState() ([]byte, error) {
+func (g *Game) JsonGameState() []byte {
 	foo := struct {
-		Rounds  []interface{}
-		Players []interface{}
-		Name    string
+		Rounds  []interface{} `json:"rounds"`
+		Players []string      `json:"players"`
+		Name    string        `json:"name"`
 	}{}
 
 	foo.Name = g.name
@@ -52,14 +53,15 @@ func (g *Game) JsonGameState() ([]byte, error) {
 	for _, v := range g.rounds {
 		foo.Rounds = append(foo.Rounds, v.ToJson())
 	}
-	for _, v := range g.players {
-		foo.Players = append(foo.Players, v)
-	}
+	//for _, v := range g.players {
+	//foo.Players = append(foo.Players, v)
+	//}
+	foo.Players = []string{"Fred", "Barney"}
 	data, err := json.Marshal(foo)
 	if err != nil {
-		return nil, err
+		panic("Unable to marshal game to json")
 	}
-	return data, nil
+	return data
 }
 
 func (g *Game) ToListedGame() ListedGame {

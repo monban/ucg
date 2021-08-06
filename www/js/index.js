@@ -12,7 +12,7 @@ function isLoggedIn() {
 }
 
 function bindElements(root) {
-	gameList = document.getElementById('games')
+	gameList = root.getElementById('games')
 	root.getElementById('refresh-button').addEventListener('click', (evt) => RefreshGameList(gameList))
 	root.getElementById('create-game-button').addEventListener('click', showCreateGameScreen)
 	root.getElementById('exit-new-game').addEventListener('click', showGameList)
@@ -64,7 +64,23 @@ function createGame() {
 	fetch('/games', {
 		method: 'POST',
 		body: JSON.stringify(newGameData),
-	}).then(console.log('game created'))
+	}).then(res => res.json())
+		.then(data => showGame(data))
+}
+
+function showGame(data) {
+	updateGameDisplay(data)
+	hideAllMainsExcept('game')
+}
+
+function updateGameDisplay(data) {
+	document.getElementById('game-name').innerText = data.name
+	const playerList = document.getElementById('game-players')
+	data.players.forEach(p => {
+		const e = document.createElement('li')
+		e.textContent = p
+		playerList.append(e)
+	})
 }
 
 function createUser() {
