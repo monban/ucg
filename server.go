@@ -117,7 +117,6 @@ func (s *server) urlForGame(id gameId) url.URL {
 type cardsRouter struct {
 }
 
-type gameId uint64
 type userId uint64
 
 type User struct {

@@ -17,11 +17,12 @@ type ListedGame struct {
 	Players int    `json:"players"`
 }
 
-func NewGame(n string) *Game {
+func NewGame(id gameId, n string) *Game {
 	return &Game{
 		players: make([]*Player, 0),
 		rounds:  make([]*Round, 0),
 		name:    n,
+		id:      id,
 	}
 }
 

@@ -1,12 +1,22 @@
 package main
 
+const maxGameId gameId = ^gameId(0)
+
+type gameId uint64
+
 type GameManager struct {
-	games []*Game
+	games map[gameId]*Game
+}
+
+func NewGameManager() *GameManager {
+	return &GameManager{
+		games: make(map[gameId]*Game, 100),
+	}
 }
 
 func (gm *GameManager) CreateGame(name string) *Game {
-	g := NewGame(name)
-	gm.games = append(gm.games, g)
+	g := NewGame(gm.nextGameId(), name)
+	gm.games[0] = g
 	return g
 }
 
@@ -16,4 +26,14 @@ func (gm *GameManager) ListGames() []ListedGame {
 		list = append(list, g.ToListedGame())
 	}
 	return list
+}
+
+func (gm *GameManager) nextGameId() gameId {
+	var nextId gameId
+	for nextId = 0; nextId < maxGameId; nextId++ {
+		if gm.games[nextId] == nil {
+			return nextId
+		}
+	}
+	panic("Out of game ids!")
 }
