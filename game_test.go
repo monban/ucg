@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/matryer/is"
 )
 
 func TestNewGame(t *testing.T) {
@@ -9,10 +11,9 @@ func TestNewGame(t *testing.T) {
 }
 
 func TestListedGame(t *testing.T) {
+	is := is.New(t)
 	const gameName = "GameName"
-	g := NewGame(gameName)
+	g := NewGame(0, gameName, &Player{})
 	lg := g.ToListedGame()
-	if lg.Name != gameName {
-		t.Errorf("Expected %v but got %v", gameName, lg.Name)
-	}
+	is.Equal(lg.Name, gameName)
 }
