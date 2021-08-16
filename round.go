@@ -12,7 +12,7 @@ type Round struct {
 	question         *Card
 	answers          []*Card
 	players          []*Player
-	players_unplayed []int
+	players_unplayed []playerId
 }
 
 type JsonRound struct {
@@ -32,7 +32,7 @@ func NewRound(n int, p *Player, q *Card) *Round {
 }
 
 func (r *Round) display() {
-	fmt.Printf("\n========\nRound %d\nCzar: %s\n", r.number, r.judge.Name)
+	fmt.Printf("\n========\nRound %d\nCzar: %s\n", r.number, r.judge.name)
 	fmt.Println("Black card:")
 	r.question.display()
 }
@@ -54,7 +54,7 @@ func (r *Round) ToJson() JsonRound {
 func (r *Round) PlayCard(p *Player, c *Card) error {
 	// Check if player has already played this round
 	for _, n := range r.players_unplayed {
-		if n == p.Id {
+		if n == p.id {
 			return errors.New("Player has already played")
 		}
 	}

@@ -15,7 +15,7 @@ func main() {
 }
 
 func runServer() error {
-	gm := NewGameManager()
+	gm := newGameManager()
 	l := log.Default()
 	s, _ := newServer(l, gm)
 	return http.ListenAndServe(":8080", s)

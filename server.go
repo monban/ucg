@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
 )
@@ -14,7 +13,8 @@ import (
 type server struct {
 	router      *http.ServeMux
 	log         *log.Logger
-	gameManager *GameManager
+	gm          *GameManager
+	pm          *playerManager
 	rootHandler http.Handler
 	users       []User
 }
@@ -24,8 +24,9 @@ func newServer(l *log.Logger, gm *GameManager) (*server, error) {
 	s := &server{
 		router:      http.NewServeMux(),
 		log:         l,
-		gameManager: gm,
+		gm:          newGameManager(),
 		rootHandler: http.FileServer(http.Dir("www")),
+		pm:          newPlayerManager(),
 	}
 	s.routes()
 	return s, nil
@@ -51,9 +52,9 @@ func (s *server) gameController() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			data, err := json.Marshal(s.gameManager.ListGames())
+			data, err := json.Marshal(s.gm.ListGames())
 			if err != nil {
-				http.Error(w, "Error marshaling games", 500)
+				http.Error(w, "Error marshaling games", http.StatusInternalServerError)
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -64,13 +65,18 @@ func (s *server) gameController() http.HandlerFunc {
 			err := json.Unmarshal(postData, &jd)
 			if err != nil {
 				log.Printf("ERROR: failed to unmarshal postData: %v", err.Error())
-				http.Error(w, "Unable to create game with provided data", 400)
+				http.Error(w, "Unable to create game with provided data", http.StatusBadRequest)
 				return
 			}
-			log.Printf("Creating new game: %v\n", jd)
-			g := s.gameManager.CreateGame(jd.Name)
+			p, err := s.pm.findPlayer(jd.PlayerId)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			log.Printf("%v creating new game: %v\n", p, jd)
+			g := s.gm.CreateGame(jd.Name, p)
 			if g == nil {
-				http.Error(w, "Unable to create game", 500)
+				http.Error(w, "Unable to create game", http.StatusInternalServerError)
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -95,12 +101,8 @@ func (s *server) newUser() http.HandlerFunc {
 			http.Error(w, "Invalid format", http.StatusBadRequest)
 			return
 		}
-		u := User{
-			Name: pd.Name,
-			Id:   userId(rand.Uint64()),
-		}
-		s.users = append(s.users, u)
-		rbody, _ := json.Marshal(u)
+		p := s.pm.newPlayer(pd.Name)
+		rbody, _ := json.Marshal(p)
 		w.WriteHeader(http.StatusCreated)
 		w.Write(rbody)
 	}
@@ -117,9 +119,7 @@ func (s *server) urlForGame(id gameId) url.URL {
 type cardsRouter struct {
 }
 
-type userId uint64
-
 type User struct {
-	Name string `json:"name"`
-	Id   userId `json:"id"`
+	Name string   `json:"name"`
+	Id   playerId `json:"id"`
 }

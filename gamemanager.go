@@ -8,14 +8,14 @@ type GameManager struct {
 	games map[gameId]*Game
 }
 
-func NewGameManager() *GameManager {
+func newGameManager() *GameManager {
 	return &GameManager{
 		games: make(map[gameId]*Game, 100),
 	}
 }
 
-func (gm *GameManager) CreateGame(name string) *Game {
-	g := NewGame(gm.nextGameId(), name)
+func (gm *GameManager) CreateGame(name string, owner *Player) *Game {
+	g := NewGame(gm.nextGameId(), name, owner)
 	gm.games[0] = g
 	return g
 }

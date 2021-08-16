@@ -15,21 +15,23 @@ type Game struct {
 type ListedGame struct {
 	Name    string `json:"name"`
 	Players int    `json:"players"`
+	Owner   string `json:"owner"`
 }
 
-func NewGame(id gameId, n string) *Game {
+func NewGame(id gameId, n string, owner *Player) *Game {
 	return &Game{
 		players: make([]*Player, 0),
 		rounds:  make([]*Round, 0),
 		name:    n,
 		id:      id,
+		owner:   owner,
 	}
 }
 
 func (g *Game) AddPlayer(name string) *Player {
 	newPlayer := Player{
-		Id:   0,
-		Name: name,
+		id:   0,
+		name: name,
 	}
 	g.players = append(g.players, &newPlayer)
 	return &newPlayer
@@ -69,9 +71,11 @@ func (g *Game) ToListedGame() ListedGame {
 	return ListedGame{
 		Name:    g.name,
 		Players: 5,
+		Owner:   g.owner.name,
 	}
 }
 
 type newGameData struct {
-	Name string `json:'name'`
+	Name     string   `json:'name'`
+	PlayerId playerId `json:"playerId"`
 }
