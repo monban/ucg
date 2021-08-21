@@ -22,7 +22,7 @@ function bindElements(root) {
 
 function CreateGameListEntry(game) {
 	const li = document.createElement('li')
-	li.textContent = game.name + ' ' + game.players
+	li.textContent = `<strong>${game.owner}</strong> ${game.name} Players: ${game.players}`
 	return li
 }
 

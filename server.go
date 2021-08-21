@@ -93,15 +93,15 @@ func (s *server) newUser() http.HandlerFunc {
 			return
 		}
 		body, _ := io.ReadAll(r.Body)
-		var pd struct {
-			Name string `json:"name"`
-		}
+		s.log.Printf("%v", string(body))
+		pd := player{}
 		err := json.Unmarshal(body, &pd)
 		if err != nil {
 			http.Error(w, "Invalid format", http.StatusBadRequest)
 			return
 		}
 		p := s.pm.newPlayer(pd.Name)
+		s.log.Printf("Creating new player: %v(%d)", p.Name, p.Id)
 		rbody, _ := json.Marshal(p)
 		w.WriteHeader(http.StatusCreated)
 		w.Write(rbody)

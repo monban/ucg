@@ -5,20 +5,20 @@ import "fmt"
 const maxPlayerId playerId = ^playerId(0)
 
 type playerManager struct {
-	players map[playerId]*Player
+	players map[playerId]*player
 }
 
 func newPlayerManager() *playerManager {
 	return &playerManager{
-		players: make(map[playerId]*Player, 100),
+		players: make(map[playerId]*player, 100),
 	}
 }
 
-func (pm *playerManager) setPlayer(p *Player) {
-	pm.players[p.id] = p
+func (pm *playerManager) setPlayer(p *player) {
+	pm.players[p.Id] = p
 }
 
-func (pm *playerManager) findPlayer(id playerId) (*Player, error) {
+func (pm *playerManager) findPlayer(id playerId) (*player, error) {
 	p, ok := pm.players[id]
 	if ok {
 		return p, nil
@@ -27,11 +27,11 @@ func (pm *playerManager) findPlayer(id playerId) (*Player, error) {
 	}
 }
 
-func (pm *playerManager) newPlayer(name string) *Player {
+func (pm *playerManager) newPlayer(name string) *player {
 	var nextId playerId
 	for nextId = 0; nextId < maxPlayerId; nextId++ {
 		if pm.players[nextId] == nil {
-			newPlayer := newPlayer(nextId, name)
+			newPlayer := &player{Id: nextId, Name: name}
 			pm.players[nextId] = newPlayer
 			return newPlayer
 		}

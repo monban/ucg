@@ -14,7 +14,7 @@ func newGameManager() *GameManager {
 	}
 }
 
-func (gm *GameManager) CreateGame(name string, owner *Player) *Game {
+func (gm *GameManager) CreateGame(name string, owner *player) *Game {
 	g := NewGame(gm.nextGameId(), name, owner)
 	gm.games[0] = g
 	return g

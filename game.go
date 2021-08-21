@@ -5,11 +5,11 @@ import (
 )
 
 type Game struct {
-	players []*Player
+	players []*player
 	rounds  []*Round
 	name    string
 	id      gameId
-	owner   *Player
+	owner   *player
 }
 
 type ListedGame struct {
@@ -18,9 +18,9 @@ type ListedGame struct {
 	Owner   string `json:"owner"`
 }
 
-func NewGame(id gameId, n string, owner *Player) *Game {
+func NewGame(id gameId, n string, owner *player) *Game {
 	return &Game{
-		players: make([]*Player, 0),
+		players: make([]*player, 0),
 		rounds:  make([]*Round, 0),
 		name:    n,
 		id:      id,
@@ -28,10 +28,10 @@ func NewGame(id gameId, n string, owner *Player) *Game {
 	}
 }
 
-func (g *Game) AddPlayer(name string) *Player {
-	newPlayer := Player{
-		id:   0,
-		name: name,
+func (g *Game) AddPlayer(name string) *player {
+	newPlayer := player{
+		Id:   0,
+		Name: name,
 	}
 	g.players = append(g.players, &newPlayer)
 	return &newPlayer
@@ -71,11 +71,11 @@ func (g *Game) ToListedGame() ListedGame {
 	return ListedGame{
 		Name:    g.name,
 		Players: 5,
-		Owner:   g.owner.name,
+		Owner:   g.owner.Name,
 	}
 }
 
 type newGameData struct {
-	Name     string   `json:'name'`
+	Name     string   `json:"name"`
 	PlayerId playerId `json:"playerId"`
 }
