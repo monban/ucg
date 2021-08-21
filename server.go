@@ -11,7 +11,7 @@ import (
 )
 
 type server struct {
-	router      *http.ServeMux
+	router      router
 	log         *log.Logger
 	gm          *GameManager
 	pm          *playerManager
@@ -19,10 +19,16 @@ type server struct {
 	users       []User
 }
 
+type router interface {
+	ServeHTTP(http.ResponseWriter, *http.Request)
+	Handle(string, string, http.Handler)
+	HandleFunc(string, string, func(http.ResponseWriter, *http.Request))
+}
+
 func newServer(l *log.Logger, gm *GameManager) (*server, error) {
 	l.Println("Setting up new server")
 	s := &server{
-		router:      http.NewServeMux(),
+		router:      &methodRouter{},
 		log:         l,
 		gm:          newGameManager(),
 		rootHandler: http.FileServer(http.Dir("www")),
@@ -48,41 +54,42 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
-func (s *server) gameController() http.HandlerFunc {
+func (s *server) getGames() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			data, err := json.Marshal(s.gm.ListGames())
-			if err != nil {
-				http.Error(w, "Error marshaling games", http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(w, string(data))
-		case http.MethodPost:
-			postData, _ := io.ReadAll(r.Body)
-			var jd newGameData
-			err := json.Unmarshal(postData, &jd)
-			if err != nil {
-				log.Printf("ERROR: failed to unmarshal postData: %v", err.Error())
-				http.Error(w, "Unable to create game with provided data", http.StatusBadRequest)
-				return
-			}
-			p, err := s.pm.findPlayer(jd.PlayerId)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			log.Printf("%v creating new game: %v\n", p, jd)
-			g := s.gm.CreateGame(jd.Name, p)
-			if g == nil {
-				http.Error(w, "Unable to create game", http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusCreated)
-			w.Write(g.JsonGameState())
+		data, err := json.Marshal(s.gm.ListGames())
+		if err != nil {
+			http.Error(w, "Error marshaling games", http.StatusInternalServerError)
+			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, string(data))
+	}
+}
+
+func (s *server) createGame() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		postData, _ := io.ReadAll(r.Body)
+		var jd newGameData
+		err := json.Unmarshal(postData, &jd)
+		if err != nil {
+			log.Printf("ERROR: failed to unmarshal postData: %v", err.Error())
+			http.Error(w, "Unable to create game with provided data", http.StatusBadRequest)
+			return
+		}
+		p, err := s.pm.findPlayer(jd.PlayerId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("%v creating new game: %v\n", p, jd)
+		g := s.gm.CreateGame(jd.Name, p)
+		if g == nil {
+			http.Error(w, "Unable to create game", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		w.Write(g.JsonGameState())
 	}
 }
 
