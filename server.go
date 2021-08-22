@@ -12,7 +12,7 @@ import (
 
 type server struct {
 	router      router
-	log         *log.Logger
+	log         printfer
 	gm          *GameManager
 	pm          *playerManager
 	rootHandler http.Handler
@@ -25,8 +25,12 @@ type router interface {
 	HandleFunc(string, string, func(http.ResponseWriter, *http.Request))
 }
 
-func newServer(l *log.Logger, gm *GameManager) (*server, error) {
-	l.Println("Setting up new server")
+type printfer interface {
+	Printf(string, ...interface{})
+}
+
+func newServer(l printfer, gm *GameManager) (*server, error) {
+	l.Printf("Setting up new server")
 	s := &server{
 		router:      &methodRouter{},
 		log:         l,

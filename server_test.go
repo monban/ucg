@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,10 +13,18 @@ import (
 	"github.com/matryer/is"
 )
 
-func setupServer() *server {
+type logTesting struct {
+	t *testing.T
+}
+
+func (lt logTesting) Printf(a string, b ...interface{}) {
+	lt.t.Logf(a, b...)
+}
+
+func setupServer(t *testing.T) *server {
+	lt := logTesting{t: t}
 	gm := GameManager{}
-	l := log.Default()
-	s, err := newServer(l, &gm)
+	s, err := newServer(lt, &gm)
 	if err != nil {
 		panic(err)
 	}
@@ -27,14 +34,14 @@ func setupServer() *server {
 func TestNewServer(t *testing.T) {
 	is := is.New(t)
 	gm := GameManager{}
-	l := log.Default()
-	_, err := newServer(l, &gm)
+	lt := logTesting{t: t}
+	_, err := newServer(lt, &gm)
 	is.NoErr(err)
 }
 
 func TestCreateGame(t *testing.T) {
 	is := is.New(t)
-	s := setupServer()
+	s := setupServer(t)
 	var jsonData []byte
 	var data io.Reader
 	var req *http.Request
@@ -67,7 +74,6 @@ func TestCreateGame(t *testing.T) {
 	req = httptest.NewRequest("POST", "/games", bytes.NewBuffer(jsonData))
 	s.ServeHTTP(rec, req)
 	body, _ := io.ReadAll(rec.Result().Body)
-	t.Logf("word: %v", string(body))
 	is.Equal(rec.Result().StatusCode, http.StatusCreated)
 	var bd struct{ Name string }
 	json.Unmarshal(body, &bd)
@@ -76,7 +82,7 @@ func TestCreateGame(t *testing.T) {
 }
 
 func TestUrlForGame(t *testing.T) {
-	s := setupServer()
+	s := setupServer(t)
 	g := s.gm.CreateGame("foo", &player{})
 	expectedPath := fmt.Sprintf("/games/%d", g.id)
 	u := s.urlForGame(g.id)
@@ -87,7 +93,7 @@ func TestUrlForGame(t *testing.T) {
 
 func TestNewUser(t *testing.T) {
 	is := is.New(t)
-	s := setupServer()
+	s := setupServer(t)
 	data := strings.NewReader("{\"name\":\"Bob\"}")
 	req := httptest.NewRequest("POST", "/users", data)
 	w := httptest.NewRecorder()
