@@ -9,8 +9,8 @@ import (
 func TestCreateUser(t *testing.T) {
 	is := is.New(t)
 	pm := newPlayerManager()
-	p := pm.newPlayer("Bob")
-	ret, err := pm.findPlayer(p.Id)
+	p := pm.NewPlayer("Bob")
+	ret, err := pm.FindPlayer(p.Id)
 	is.NoErr(err)
 	is.Equal(ret.Name, p.Name)
 }

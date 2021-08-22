@@ -46,7 +46,7 @@ func TestCreateGame(t *testing.T) {
 	var data io.Reader
 	var req *http.Request
 	var rec *httptest.ResponseRecorder
-	var p player
+	var p Player
 
 	// First we try without including a player id
 	jsonData, _ = json.Marshal(newGameData{Name: "foo"})
@@ -83,7 +83,7 @@ func TestCreateGame(t *testing.T) {
 
 func TestUrlForGame(t *testing.T) {
 	s := setupServer(t)
-	g := s.gm.CreateGame("foo", &player{})
+	g := s.gm.CreateGame("foo", &Player{})
 	expectedPath := fmt.Sprintf("/games/%d", g.id)
 	u := s.urlForGame(g.id)
 	if u.Path != expectedPath {

@@ -4,21 +4,21 @@ import "fmt"
 
 const maxPlayerId playerId = ^playerId(0)
 
-type playerManager struct {
-	players map[playerId]*player
+type PlayerManager struct {
+	players map[playerId]*Player
 }
 
-func newPlayerManager() *playerManager {
-	return &playerManager{
-		players: make(map[playerId]*player, 100),
+func newPlayerManager() *PlayerManager {
+	return &PlayerManager{
+		players: make(map[playerId]*Player, 100),
 	}
 }
 
-func (pm *playerManager) setPlayer(p *player) {
+func (pm *PlayerManager) setPlayer(p *Player) {
 	pm.players[p.Id] = p
 }
 
-func (pm *playerManager) findPlayer(id playerId) (*player, error) {
+func (pm *PlayerManager) FindPlayer(id playerId) (*Player, error) {
 	p, ok := pm.players[id]
 	if ok {
 		return p, nil
@@ -27,11 +27,11 @@ func (pm *playerManager) findPlayer(id playerId) (*player, error) {
 	}
 }
 
-func (pm *playerManager) newPlayer(name string) *player {
+func (pm *PlayerManager) NewPlayer(name string) *Player {
 	var nextId playerId
 	for nextId = 0; nextId < maxPlayerId; nextId++ {
 		if pm.players[nextId] == nil {
-			newPlayer := &player{Id: nextId, Name: name}
+			newPlayer := &Player{Id: nextId, Name: name}
 			pm.players[nextId] = newPlayer
 			return newPlayer
 		}

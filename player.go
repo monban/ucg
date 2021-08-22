@@ -2,7 +2,7 @@ package main
 
 type playerId uint64
 
-type player struct {
+type Player struct {
 	Id   playerId `json:"id"`
 	Name string   `json:"name"`
 }

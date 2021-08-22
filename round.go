@@ -8,21 +8,21 @@ import (
 
 type Round struct {
 	number           int
-	judge            *player
+	judge            *Player
 	question         *Card
 	answers          []*Card
-	players          []*player
+	players          []*Player
 	players_unplayed []playerId
 }
 
 type JsonRound struct {
 	Number   int
-	Judge    *player
+	Judge    *Player
 	Question *Card
 	Answers  []*Card
 }
 
-func NewRound(n int, p *player, q *Card) *Round {
+func NewRound(n int, p *Player, q *Card) *Round {
 	return &Round{
 		number:   n,
 		judge:    p,
@@ -51,7 +51,7 @@ func (r *Round) ToJson() JsonRound {
 	}
 }
 
-func (r *Round) PlayCard(p *player, c *Card) error {
+func (r *Round) PlayCard(p *Player, c *Card) error {
 	// Check if player has already played this round
 	for _, n := range r.players_unplayed {
 		if n == p.Id {

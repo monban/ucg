@@ -13,7 +13,7 @@ func TestNewGame(t *testing.T) {
 func TestListedGame(t *testing.T) {
 	is := is.New(t)
 	const gameName = "GameName"
-	g := NewGame(0, gameName, &player{})
+	g := NewGame(0, gameName, &Player{})
 	lg := g.ToListedGame()
 	is.Equal(lg.Name, gameName)
 }

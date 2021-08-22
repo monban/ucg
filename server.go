@@ -13,10 +13,9 @@ import (
 type server struct {
 	router      router
 	log         printfer
-	gm          *GameManager
-	pm          *playerManager
+	gm          gameManager
+	pm          playerManager
 	rootHandler http.Handler
-	users       []User
 }
 
 type router interface {
@@ -27,6 +26,16 @@ type router interface {
 
 type printfer interface {
 	Printf(string, ...interface{})
+}
+
+type gameManager interface {
+	ListGames() []ListedGame
+	CreateGame(string, *Player) *Game
+}
+
+type playerManager interface {
+	FindPlayer(playerId) (*Player, error)
+	NewPlayer(string) *Player
 }
 
 func newServer(l printfer, gm *GameManager) (*server, error) {
@@ -80,7 +89,7 @@ func (s *server) createGame() http.HandlerFunc {
 			http.Error(w, "Unable to create game with provided data", http.StatusBadRequest)
 			return
 		}
-		p, err := s.pm.findPlayer(jd.PlayerId)
+		p, err := s.pm.FindPlayer(jd.PlayerId)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -105,13 +114,13 @@ func (s *server) newUser() http.HandlerFunc {
 		}
 		body, _ := io.ReadAll(r.Body)
 		s.log.Printf("%v", string(body))
-		pd := player{}
+		pd := Player{}
 		err := json.Unmarshal(body, &pd)
 		if err != nil {
 			http.Error(w, "Invalid format", http.StatusBadRequest)
 			return
 		}
-		p := s.pm.newPlayer(pd.Name)
+		p := s.pm.NewPlayer(pd.Name)
 		s.log.Printf("Creating new player: %v(%d)", p.Name, p.Id)
 		rbody, _ := json.Marshal(p)
 		w.WriteHeader(http.StatusCreated)
@@ -125,12 +134,4 @@ func (s *server) urlForGame(id gameId) url.URL {
 	u := url.URL{}
 	u.Path = p
 	return u
-}
-
-type cardsRouter struct {
-}
-
-type User struct {
-	Name string   `json:"name"`
-	Id   playerId `json:"id"`
 }
