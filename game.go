@@ -28,13 +28,8 @@ func NewGame(id gameId, n string, owner *Player) *Game {
 	}
 }
 
-func (g *Game) AddPlayer(name string) *Player {
-	newPlayer := Player{
-		Id:   0,
-		Name: name,
-	}
-	g.players = append(g.players, &newPlayer)
-	return &newPlayer
+func (g *Game) AddPlayer(p *Player) {
+	g.players = append(g.players, p)
 }
 
 func (g *Game) StartNewRound() *Round {
@@ -70,7 +65,7 @@ func (g *Game) JsonGameState() []byte {
 func (g *Game) ToListedGame() ListedGame {
 	return ListedGame{
 		Name:    g.name,
-		Players: 5,
+		Players: len(g.players) + 1,
 		Owner:   g.owner.Name,
 	}
 }
