@@ -12,7 +12,7 @@ type Round struct {
 	question         *Card
 	answers          []*Card
 	players          []*Player
-	players_unplayed []playerId
+	players_unplayed []PlayerId
 }
 
 type JsonRound struct {

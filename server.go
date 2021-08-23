@@ -34,18 +34,18 @@ type gameManager interface {
 }
 
 type playerManager interface {
-	FindPlayer(playerId) (*Player, error)
+	FindPlayer(PlayerId) (*Player, error)
 	NewPlayer(string) *Player
 }
 
-func newServer(l printfer, gm *GameManager) (*server, error) {
+func newServer(l printfer, gm *GameManager, pm playerManager) (*server, error) {
 	l.Printf("Setting up new server")
 	s := &server{
 		router:      &methodRouter{},
 		log:         l,
 		gm:          newGameManager(),
 		rootHandler: http.FileServer(http.Dir("www")),
-		pm:          newPlayerManager(),
+		pm:          pm,
 	}
 	s.routes()
 	return s, nil

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,68 +22,66 @@ func (lt logTesting) Printf(a string, b ...interface{}) {
 	lt.t.Logf(a, b...)
 }
 
-func setupServer(t *testing.T) *server {
-	lt := logTesting{t: t}
-	gm := GameManager{}
-	s, err := newServer(lt, &gm)
-	if err != nil {
-		panic(err)
-	}
-	return s
-}
-
 func TestNewServer(t *testing.T) {
 	is := is.New(t)
-	gm := GameManager{}
 	lt := logTesting{t: t}
-	_, err := newServer(lt, &gm)
+	_, err := newServer(lt, &GameManager{}, &PlayerManager{})
 	is.NoErr(err)
 }
 
 func TestCreateGame(t *testing.T) {
-	is := is.New(t)
-	s := setupServer(t)
-	var jsonData []byte
-	var data io.Reader
-	var req *http.Request
 	var rec *httptest.ResponseRecorder
-	var p Player
+	var req *http.Request
+	var jsonData []byte
+	var postData io.Reader
+	var resultBody []byte
+	var pm *MockPlayerManager = &MockPlayerManager{}
+	var is *is.I = is.New(t)
+
+	// Set up mocks
+	pm.FindPlayerCall.Returns.player = nil
+	pm.FindPlayerCall.Returns.err = errors.New("Player not found")
+	gm := newGameManager()
+	srv, _ := newServer(&logTesting{t: t}, gm, pm)
 
 	// First we try without including a player id
+
+	// Set up the request
 	jsonData, _ = json.Marshal(newGameData{Name: "foo"})
-	data = bytes.NewReader(jsonData)
-	req = httptest.NewRequest("POST", "/games", data)
+	postData = bytes.NewReader(jsonData)
+	req = httptest.NewRequest("POST", "/games", postData)
 	rec = httptest.NewRecorder()
-	s.ServeHTTP(rec, req)
+
+	// Make the request
+	srv.ServeHTTP(rec, req)
+
+	// Check the results
+	resultBody, _ = io.ReadAll(rec.Result().Body)
+	t.Logf("resultBody: %v", string(resultBody))
 	is.Equal(rec.Result().StatusCode, http.StatusBadRequest)
 
-	// Create player
-	pData, _ := json.Marshal(struct {
-		Name string `json:"name"`
-	}{
-		Name: "Bob"})
-	req = httptest.NewRequest("POST", "/users", bytes.NewBuffer(pData))
-	s.ServeHTTP(rec, req)
-	returnData, _ := io.ReadAll(rec.Result().Body)
-	t.Logf("returnData: %v\n", string(returnData))
-	json.Unmarshal(returnData, &p)
-	pid := p.Id
+	// This time we'll include a player id
+	// Set up mocks
+	pm.FindPlayerCall.Returns.player = &Player{Name: "TestPlayer"}
+	pm.FindPlayerCall.Returns.err = nil
 
-	// Create game
+	// Set up the request
+	jsonData, _ = json.Marshal(newGameData{Name: "foo", PlayerId: 0})
+	postData = bytes.NewReader(jsonData)
+	req = httptest.NewRequest("POST", "/games", postData)
 	rec = httptest.NewRecorder()
-	jsonData, _ = json.Marshal(newGameData{Name: "foo", PlayerId: pid})
-	req = httptest.NewRequest("POST", "/games", bytes.NewBuffer(jsonData))
-	s.ServeHTTP(rec, req)
-	body, _ := io.ReadAll(rec.Result().Body)
-	is.Equal(rec.Result().StatusCode, http.StatusCreated)
-	var bd struct{ Name string }
-	json.Unmarshal(body, &bd)
 
-	is.Equal(bd.Name, "foo")
+	// Make the request
+	srv.ServeHTTP(rec, req)
+
+	// Check the results
+	resultBody, _ = io.ReadAll(rec.Result().Body)
+	t.Logf("resultBody: %v", string(resultBody))
+
 }
 
 func TestUrlForGame(t *testing.T) {
-	s := setupServer(t)
+	s, _ := newServer(&logTesting{t}, &GameManager{}, &PlayerManager{})
 	g := s.gm.CreateGame("foo", &Player{})
 	expectedPath := fmt.Sprintf("/games/%d", g.id)
 	u := s.urlForGame(g.id)
@@ -93,14 +92,17 @@ func TestUrlForGame(t *testing.T) {
 
 func TestNewUser(t *testing.T) {
 	is := is.New(t)
-	s := setupServer(t)
+	pm := &MockPlayerManager{}
+	pm.FindPlayerCall.Returns.player = &Player{Name: "TestPlayer"}
+	s, _ := newServer(&logTesting{t}, &GameManager{}, pm)
 	data := strings.NewReader("{\"name\":\"Bob\"}")
 	req := httptest.NewRequest("POST", "/users", data)
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 	is.Equal(w.Result().StatusCode, http.StatusCreated)
+	is.Equal(pm.NewPlayerCall.Receives.Name, "TestPlayer")
 	body, _ := io.ReadAll(w.Result().Body)
-	var bd struct{ id playerId }
+	var bd struct{ id PlayerId }
 	err := json.Unmarshal(body, &bd)
 	is.NoErr(err)
 }

@@ -77,5 +77,5 @@ func (g *Game) ToListedGame() ListedGame {
 
 type newGameData struct {
 	Name     string   `json:"name"`
-	PlayerId playerId `json:"playerId"`
+	PlayerId PlayerId `json:"PlayerId"`
 }
