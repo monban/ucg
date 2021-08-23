@@ -28,38 +28,41 @@ func TestNewServer(t *testing.T) {
 	is.NoErr(err)
 }
 
-func TestCreateGame(t *testing.T) {
-	var rec *httptest.ResponseRecorder
-	var req *http.Request
-	var jsonData []byte
-	var postData io.Reader
-	var resultBody []byte
-	var pm *MockPlayerManager = &MockPlayerManager{}
-	var gm *MockGameManager = &MockGameManager{}
-	var is *is.I = is.New(t)
+func TestCreateGameWithoutPlayer(t *testing.T) {
+	is := is.New(t)
+	pm := &MockPlayerManager{}
+	gm := &MockGameManager{}
+	srv, _ := newServer(&logTesting{t}, gm, pm)
 
 	// Set up mocks
 	pm.FindPlayerCall.Returns.player = nil
 	pm.FindPlayerCall.Returns.err = errors.New("Player not found")
-	srv, _ := newServer(&logTesting{t: t}, gm, pm)
 
 	// First we try without including a player id
 
 	// Set up the request
-	jsonData, _ = json.Marshal(newGameData{Name: "foo"})
-	postData = bytes.NewReader(jsonData)
-	req = httptest.NewRequest("POST", "/games", postData)
-	rec = httptest.NewRecorder()
+	jsonData, _ := json.Marshal(newGameData{Name: "foo"})
+	postData := bytes.NewReader(jsonData)
+	req := httptest.NewRequest("POST", "/games", postData)
+	rec := httptest.NewRecorder()
 
 	// Make the request
 	srv.ServeHTTP(rec, req)
 
 	// Check the results
-	resultBody, _ = io.ReadAll(rec.Result().Body)
+	resultBody, _ := io.ReadAll(rec.Result().Body)
 	t.Logf("resultBody: %v", string(resultBody))
 	is.Equal(rec.Result().StatusCode, http.StatusBadRequest)
 
 	// This time we'll include a player id
+}
+
+func TestCreateGameWithPlayer(t *testing.T) {
+	is := is.New(t)
+	pm := &MockPlayerManager{}
+	gm := &MockGameManager{}
+	srv, _ := newServer(&logTesting{t}, gm, pm)
+
 	// Set up mocks
 	testPlayer := &Player{Name: "TestPlayer"}
 	pm.FindPlayerCall.Returns.player = testPlayer
@@ -68,10 +71,10 @@ func TestCreateGame(t *testing.T) {
 
 	// Set up the request
 	gameData := newGameData{Name: "foo", PlayerId: 0}
-	jsonData, _ = json.Marshal(gameData)
-	postData = bytes.NewReader(jsonData)
-	req = httptest.NewRequest("POST", "/games", postData)
-	rec = httptest.NewRecorder()
+	jsonData, _ := json.Marshal(gameData)
+	postData := bytes.NewReader(jsonData)
+	req := httptest.NewRequest("POST", "/games", postData)
+	rec := httptest.NewRecorder()
 
 	// Make the request
 	srv.ServeHTTP(rec, req)
@@ -79,7 +82,7 @@ func TestCreateGame(t *testing.T) {
 	// Check the results
 	is.Equal(gm.CreateGameCall.Receives.Name, gameData.Name)
 	is.Equal(gm.CreateGameCall.Receives.Owner, testPlayer)
-	resultBody, _ = io.ReadAll(rec.Result().Body)
+	resultBody, _ := io.ReadAll(rec.Result().Body)
 	t.Logf("resultBody: %v", string(resultBody))
 	is.Equal(rec.Result().StatusCode, http.StatusCreated)
 }
