@@ -67,7 +67,7 @@ func TestCreateGameWithPlayer(t *testing.T) {
 	testPlayer := &Player{Name: "TestPlayer"}
 	pm.FindPlayerCall.Returns.player = testPlayer
 	pm.FindPlayerCall.Returns.err = nil
-	gm.CreateGameCall.Returns.Game = &Game{}
+	gm.CreateGameCall.Returns.Game = &Game{owner: testPlayer}
 
 	// Set up the request
 	gameData := newGameData{Name: "foo", PlayerId: 0}

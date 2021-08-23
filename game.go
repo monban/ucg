@@ -1,15 +1,17 @@
 package main
 
-import (
-	"encoding/json"
-)
-
 type Game struct {
 	players []*Player
 	rounds  []*Round
 	name    string
 	id      gameId
 	owner   *Player
+}
+
+type PlayerViewGameState struct {
+	Rounds  []Round  `json:"rounds"`
+	Players []string `json:"players"`
+	Name    string   `json:"name"`
 }
 
 type ListedGame struct {
@@ -39,27 +41,18 @@ func (g *Game) StartNewRound() *Round {
 	return r
 }
 
-func (g *Game) JsonGameState() []byte {
-	foo := struct {
-		Rounds  []interface{} `json:"rounds"`
-		Players []string      `json:"players"`
-		Name    string        `json:"name"`
-	}{}
-
-	foo.Name = g.name
-
-	for _, v := range g.rounds {
-		foo.Rounds = append(foo.Rounds, v.ToJson())
+func (g *Game) PlayerViewGameState() PlayerViewGameState {
+	pvgs := PlayerViewGameState{Name: g.name}
+	pvgs.Rounds = make([]Round, len(g.rounds))
+	for i := range g.rounds {
+		pvgs.Rounds[i] = *g.rounds[i]
 	}
-	//for _, v := range g.players {
-	//foo.Players = append(foo.Players, v)
-	//}
-	foo.Players = []string{"Fred", "Barney"}
-	data, err := json.Marshal(foo)
-	if err != nil {
-		panic("Unable to marshal game to json")
+	pvgs.Players = make([]string, len(g.players)+1)
+	pvgs.Players[0] = g.owner.Name
+	for i := range g.players {
+		pvgs.Players[i+1] = g.players[i].Name
 	}
-	return data
+	return pvgs
 }
 
 func (g *Game) ToListedGame() ListedGame {

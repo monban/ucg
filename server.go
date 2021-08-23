@@ -102,7 +102,8 @@ func (s *server) createGame() http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write(g.JsonGameState())
+		body, _ := json.Marshal(g.PlayerViewGameState())
+		w.Write(body)
 	}
 }
 
