@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/matryer/is"
@@ -92,16 +91,19 @@ func TestUrlForGame(t *testing.T) {
 
 func TestNewUser(t *testing.T) {
 	is := is.New(t)
+	testPlayer := &Player{Name: "TestPlayer"}
 	pm := &MockPlayerManager{}
-	pm.FindPlayerCall.Returns.player = &Player{Name: "TestPlayer"}
+	pm.FindPlayerCall.Returns.player = testPlayer
 	s, _ := newServer(&logTesting{t}, &GameManager{}, pm)
-	data := strings.NewReader("{\"name\":\"Bob\"}")
-	req := httptest.NewRequest("POST", "/users", data)
+	postData, _ := json.Marshal(testPlayer)
+	postBytes := bytes.NewBuffer(postData)
+	req := httptest.NewRequest("POST", "/users", postBytes)
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 	is.Equal(w.Result().StatusCode, http.StatusCreated)
 	is.Equal(pm.NewPlayerCall.Receives.Name, "TestPlayer")
 	body, _ := io.ReadAll(w.Result().Body)
+	t.Logf("Returned body: %v", string(body))
 	var bd struct{ id PlayerId }
 	err := json.Unmarshal(body, &bd)
 	is.NoErr(err)
