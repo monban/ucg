@@ -35,12 +35,12 @@ func TestCreateGame(t *testing.T) {
 	var postData io.Reader
 	var resultBody []byte
 	var pm *MockPlayerManager = &MockPlayerManager{}
+	var gm *MockGameManager = &MockGameManager{}
 	var is *is.I = is.New(t)
 
 	// Set up mocks
 	pm.FindPlayerCall.Returns.player = nil
 	pm.FindPlayerCall.Returns.err = errors.New("Player not found")
-	gm := newGameManager()
 	srv, _ := newServer(&logTesting{t: t}, gm, pm)
 
 	// First we try without including a player id
@@ -61,11 +61,14 @@ func TestCreateGame(t *testing.T) {
 
 	// This time we'll include a player id
 	// Set up mocks
-	pm.FindPlayerCall.Returns.player = &Player{Name: "TestPlayer"}
+	testPlayer := &Player{Name: "TestPlayer"}
+	pm.FindPlayerCall.Returns.player = testPlayer
 	pm.FindPlayerCall.Returns.err = nil
+	gm.CreateGameCall.Returns.Game = &Game{}
 
 	// Set up the request
-	jsonData, _ = json.Marshal(newGameData{Name: "foo", PlayerId: 0})
+	gameData := newGameData{Name: "foo", PlayerId: 0}
+	jsonData, _ = json.Marshal(gameData)
 	postData = bytes.NewReader(jsonData)
 	req = httptest.NewRequest("POST", "/games", postData)
 	rec = httptest.NewRecorder()
@@ -74,16 +77,18 @@ func TestCreateGame(t *testing.T) {
 	srv.ServeHTTP(rec, req)
 
 	// Check the results
+	is.Equal(gm.CreateGameCall.Receives.Name, gameData.Name)
+	is.Equal(gm.CreateGameCall.Receives.Owner, testPlayer)
 	resultBody, _ = io.ReadAll(rec.Result().Body)
 	t.Logf("resultBody: %v", string(resultBody))
-
+	is.Equal(rec.Result().StatusCode, http.StatusCreated)
 }
 
 func TestUrlForGame(t *testing.T) {
-	s, _ := newServer(&logTesting{t}, &GameManager{}, &PlayerManager{})
-	g := s.gm.CreateGame("foo", &Player{})
-	expectedPath := fmt.Sprintf("/games/%d", g.id)
-	u := s.urlForGame(g.id)
+	gm := &MockGameManager{}
+	s, _ := newServer(&logTesting{t}, gm, &PlayerManager{})
+	expectedPath := fmt.Sprintf("/games/%d", 1234)
+	u := s.urlForGame(1234)
 	if u.Path != expectedPath {
 		t.Errorf("Expected %v, got %v", expectedPath, u.Path)
 	}
