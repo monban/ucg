@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
 type server struct {
@@ -31,6 +33,7 @@ type printfer interface {
 type gameManager interface {
 	ListGames() []ListedGame
 	CreateGame(string, *Player) *Game
+	AddPlayerToGame(*Player, gameId) error
 }
 
 type playerManager interface {
@@ -79,22 +82,48 @@ func (s *server) getGames() http.HandlerFunc {
 	}
 }
 
-func (s *server) createGame() http.HandlerFunc {
+func (s *server) postGamesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		player, err := PlayerFromReq(r, s.pm)
+		if err != nil {
+			s.log.Printf(err.Error())
+			http.Error(w, "Error occured reading body", http.StatusBadRequest)
+			return
+		}
+		pathElements := strings.Split(r.URL.Path, "/")
+		s.log.Printf("Last element of path is %v", pathElements[len(pathElements)-1])
+		if pathElements[len(pathElements)-1] == "join" {
+			gidint, err := strconv.ParseUint(pathElements[len(pathElements)-2], 10, 64)
+			if err != nil {
+				s.log.Printf(err.Error())
+				http.Error(w, "Error occured parsing game id", http.StatusBadRequest)
+			}
+			s.gm.AddPlayerToGame(player, gameId(gidint))
+			w.WriteHeader(http.StatusNoContent)
+
+			return
+		}
+	}
+}
+
+func (s *server) createGameHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		p, err := PlayerFromReq(r, s.pm)
+		if err != nil {
+			s.log.Printf(err.Error())
+			http.Error(w, "Unable to create game with this user", http.StatusBadRequest)
+			return
+		}
 		postData, _ := io.ReadAll(r.Body)
 		var jd newGameData
-		err := json.Unmarshal(postData, &jd)
+		err = json.Unmarshal(postData, &jd)
 		if err != nil {
 			log.Printf("ERROR: failed to unmarshal postData: %v", err.Error())
 			http.Error(w, "Unable to create game with provided data", http.StatusBadRequest)
 			return
 		}
-		p, err := s.pm.FindPlayer(jd.PlayerId)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		log.Printf("%v creating new game: %v\n", p, jd)
+		s.log.Printf("%v creating new game: %v\n", p, jd)
 		g := s.gm.CreateGame(jd.Name, p)
 		if g == nil {
 			http.Error(w, "Unable to create game", http.StatusInternalServerError)
@@ -135,4 +164,34 @@ func (s *server) urlForGame(id gameId) url.URL {
 	u := url.URL{}
 	u.Path = p
 	return u
+}
+
+func JsonBody(r *http.Request, d interface{}) error {
+	var err error
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, d)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func PlayerFromReq(r *http.Request, pm playerManager) (*Player, error) {
+	pidstring := r.Header.Get("X-Player-Id")
+	pidint, err := strconv.ParseUint(pidstring, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	player, err := pm.FindPlayer(PlayerId(pidint))
+	if err != nil {
+		return nil, err
+	}
+	return player, nil
+}
+
+type serverMessage struct {
+	action string
 }

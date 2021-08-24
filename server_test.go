@@ -70,10 +70,11 @@ func TestCreateGameWithPlayer(t *testing.T) {
 	gm.CreateGameCall.Returns.Game = &Game{owner: testPlayer}
 
 	// Set up the request
-	gameData := newGameData{Name: "foo", PlayerId: 0}
+	gameData := newGameData{Name: "foo"}
 	jsonData, _ := json.Marshal(gameData)
 	postData := bytes.NewReader(jsonData)
 	req := httptest.NewRequest("POST", "/games", postData)
+	req.Header.Add("X-Player-Id", fmt.Sprint(testPlayer.Id))
 	rec := httptest.NewRecorder()
 
 	// Make the request
@@ -115,4 +116,28 @@ func TestNewUser(t *testing.T) {
 	var bd struct{ id PlayerId }
 	err := json.Unmarshal(body, &bd)
 	is.NoErr(err)
+}
+
+func TestUserCanJoinGame(t *testing.T) {
+	is := is.New(t)
+	owner := &Player{Name: "Game Owner", Id: 0}
+	game := &Game{id: 0, name: "Test Game", owner: owner}
+	pm := &MockPlayerManager{}
+	gm := &MockGameManager{log: &logTesting{t}}
+	srv, _ := newServer(&logTesting{t}, gm, pm)
+	newPlayer := &Player{Name: "Second Player"}
+	pm.FindPlayerCall.Returns.player = newPlayer
+	postData, _ := json.Marshal(struct{ PlayerId PlayerId }{newPlayer.Id})
+
+	url := srv.urlForGame(game.id)
+	url.Path = fmt.Sprintf("%v/join", url.Path)
+
+	req := httptest.NewRequest("POST", url.Path, bytes.NewBuffer(postData))
+	req.Header.Add("X-Player-Id", fmt.Sprint(newPlayer.Id))
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, req)
+	body, _ := io.ReadAll(rec.Result().Body)
+	t.Logf("Resultbody: %+v", string(body))
+	t.Logf("StatusCode: %d", rec.Code)
+	is.Equal(gm.AddPlayerToGameCall.Receives.p, newPlayer)
 }

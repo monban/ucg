@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 const maxGameId gameId = ^gameId(0)
 
 type gameId uint64
@@ -36,4 +38,13 @@ func (gm *GameManager) nextGameId() gameId {
 		}
 	}
 	panic("Out of game ids!")
+}
+
+func (gm *GameManager) AddPlayerToGame(p *Player, gid gameId) error {
+	game, ok := gm.games[gid]
+	if !ok {
+		return fmt.Errorf("Game with id %v not found", gid)
+	}
+	game.AddPlayer(p)
+	return nil
 }

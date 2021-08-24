@@ -22,7 +22,7 @@ function bindElements(root) {
 
 function CreateGameListEntry(game) {
 	const li = document.createElement('li')
-	li.textContent = `<strong>${game.owner}</strong> ${game.name} Players: ${game.players}`
+	li.innerHTML = `<strong>${game.owner}</strong> ${game.name} Players: ${game.players}`
 	return li
 }
 
@@ -63,6 +63,9 @@ function createGame() {
 	}
 	fetch('/games', {
 		method: 'POST',
+		headers: {
+			'X-Player-Id': localStorage.getItem('userid'),
+		},
 		body: JSON.stringify(newGameData),
 	}).then(res => res.json())
 		.then(data => showGame(data))
