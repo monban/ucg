@@ -1,5 +1,7 @@
 package main
 
+import "encoding/json"
+
 type Game struct {
 	players []*Player
 	rounds  []*Round
@@ -8,16 +10,12 @@ type Game struct {
 	owner   *Player
 }
 
-type PlayerViewGameState struct {
-	Rounds  []Round  `json:"rounds"`
-	Players []string `json:"players"`
-	Name    string   `json:"name"`
-}
-
-type ListedGame struct {
-	Name    string `json:"name"`
-	Players int    `json:"players"`
-	Owner   string `json:"owner"`
+type PlayerViewGame struct {
+	Name        string   `json:"name"`
+	PlayerCount int      `json:"playerCount"`
+	PlayerNames []string `json:"playerNames"`
+	Owner       string   `json:"owner"`
+	Id          gameId   `json:"id"`
 }
 
 func NewGame(id gameId, n string, owner *Player) *Game {
@@ -41,26 +39,31 @@ func (g *Game) StartNewRound() *Round {
 	return r
 }
 
-func (g *Game) PlayerViewGameState() PlayerViewGameState {
-	pvgs := PlayerViewGameState{Name: g.name}
-	pvgs.Rounds = make([]Round, len(g.rounds))
-	for i := range g.rounds {
-		pvgs.Rounds[i] = *g.rounds[i]
+func (g *Game) PlayerNames() []string {
+	c := len(g.players) + 1
+	names := make([]string, c, c)
+	names[0] = g.owner.Name
+	if c == 1 {
+		return names
 	}
-	pvgs.Players = make([]string, len(g.players)+1)
-	pvgs.Players[0] = g.owner.Name
-	for i := range g.players {
-		pvgs.Players[i+1] = g.players[i].Name
+	for i := 1; i < c; i++ {
+		names[i] = g.players[i-1].Name
 	}
-	return pvgs
+	return names
 }
 
-func (g *Game) ToListedGame() ListedGame {
-	return ListedGame{
-		Name:    g.name,
-		Players: len(g.players) + 1,
-		Owner:   g.owner.Name,
+func (g *Game) PlayerView() PlayerViewGame {
+	return PlayerViewGame{
+		Name:        g.name,
+		PlayerCount: len(g.players) + 1,
+		Owner:       g.owner.Name,
+		PlayerNames: g.PlayerNames(),
+		Id:          g.id,
 	}
+}
+
+func (g *Game) MarshalJSON() ([]byte, error) {
+	return json.Marshal(g.PlayerView())
 }
 
 type newGameData struct {

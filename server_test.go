@@ -141,3 +141,36 @@ func TestUserCanJoinGame(t *testing.T) {
 	t.Logf("StatusCode: %d", rec.Code)
 	is.Equal(gm.AddPlayerToGameCall.Receives.p, newPlayer)
 }
+
+func TestGetGame(t *testing.T) {
+	is, _, gm, srv := StandardMocks(t)
+	owner := &Player{}
+	game := NewGame(137, "Super Happy Fun Time!", owner)
+	gameView := game.PlayerView()
+	gm.GetGamePlayerViewCall.Returns.game = &gameView
+
+	uri := fmt.Sprintf("/games/%d", game.id)
+	req := httptest.NewRequest("GET", uri, nil)
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, req)
+	is.Equal(rec.Result().StatusCode, http.StatusOK)
+	returnedGame := &PlayerViewGame{}
+	UnmarshalRecorder(rec, returnedGame)
+	is.Equal(rec.Result().Header.Get("Content-Type"), "application/json")
+	is.Equal(gm.GetGamePlayerViewCall.Receives.id, game.id)
+	is.Equal(game.PlayerView(), *returnedGame)
+}
+
+func StandardMocks(t *testing.T) (*is.I, *MockPlayerManager, *MockGameManager, *server) {
+	i := is.NewRelaxed(t)
+	lt := &logTesting{t}
+	pm := &MockPlayerManager{}
+	gm := &MockGameManager{log: lt}
+	srv, _ := newServer(lt, gm, pm)
+	return i, pm, gm, srv
+}
+
+func UnmarshalRecorder(rec *httptest.ResponseRecorder, d interface{}) {
+	body, _ := io.ReadAll(rec.Result().Body)
+	json.Unmarshal(body, d)
+}

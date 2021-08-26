@@ -22,12 +22,24 @@ func (gm *GameManager) CreateGame(name string, owner *Player) *Game {
 	return g
 }
 
-func (gm *GameManager) ListGames() []ListedGame {
-	list := make([]ListedGame, 0, len(gm.games))
+func (gm *GameManager) ListGames() []*Game {
+	n := len(gm.games)
+	list := make([]*Game, 0, n)
+	i := 0
 	for _, g := range gm.games {
-		list = append(list, g.ToListedGame())
+		i++
+		list[i] = g
 	}
 	return list
+}
+
+func (gm *GameManager) GetGamePlayerView(id gameId) (*PlayerViewGame, error) {
+	game, ok := gm.games[id]
+	if !ok {
+		return nil, fmt.Errorf("Cannot find game with id %d", id)
+	}
+	view := game.PlayerView()
+	return &view, nil
 }
 
 func (gm *GameManager) nextGameId() gameId {

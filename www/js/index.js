@@ -18,16 +18,39 @@ function bindElements(root) {
 	root.getElementById('exit-new-game').addEventListener('click', showGameList)
 	root.getElementById('input-button-create-game').addEventListener('click', createGame)
 	root.getElementById('input-button-create-user').addEventListener('click', createUser)
+//	root.getElementById('input-button-join-game').addEventListener('click', joinGame)
 }
 
 function CreateGameListEntry(game) {
 	const li = document.createElement('li')
-	li.innerHTML = `<strong>${game.owner}</strong> ${game.name} Players: ${game.players}`
+
+	const owner = document.createElement('strong')
+	owner.innerText = game.owner
+
+	const button = document.createElement('input')
+	button.setAttribute('type', 'button')
+	button.setAttribute('value', 'Show')
+	button.addEventListener('click', () => fetch(`/games/${game.id}`)
+		.then(res => {
+			if (res.ok)
+				return res.json()
+			throw new Error('Error: ' + res.status)
+		})
+		.then(res => res.json())
+		.then(showGame))
+
+	const name = document.createElement('span')
+	name.setAttribute('class', 'game-name')
+	name.innerText = game.name
+
+	li.appendChild(owner)
+	li.appendChild(name)
+	li.appendChild(button)
 	return li
 }
 
 function RefreshGameList(gl) {
-	fetch('http://localhost:8080/games')
+	fetch('/games')
 		.then(resp => {
 			if (resp.ok)
 				return resp.json()
@@ -79,7 +102,7 @@ function showGame(data) {
 function updateGameDisplay(data) {
 	document.getElementById('game-name').innerText = data.name
 	const playerList = document.getElementById('game-players')
-	data.players.forEach(p => {
+	data.playerNames.forEach(p => {
 		const e = document.createElement('li')
 		e.textContent = p
 		playerList.append(e)
@@ -100,3 +123,5 @@ function createUser() {
 			showGameList()
 		})
 }
+
+

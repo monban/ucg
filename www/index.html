@@ -1,10 +1,12 @@
 <html>
 	<head>
 		<title>Untitled Card Game</title>
+		<link rel="stylesheet" href="/css/index.css">
+		<link rel="license" href="https://www.gnu.org/licenses/agpl-3.0.en.html">
 	</head>
 	<body>
+		<script src="/js/index.js" defer></script>
 		<main id="game-list" hidden>
-			<script src="/js/index.js"></script>
 			<h2>Games</h2>
 			<img src="/img/4213447-arrow-load-loading-refresh-reload-restart-sync_115423.svg" alt="refresh" width=24 id="refresh-button">
 			<ul id="games"></ul>
@@ -24,8 +26,9 @@
 		<main id="game" hidden>
 			<h2 id="game-name"></h2>
 			<ul id="game-players"></ul>
+			<input type="button" value="Join" id="input-button-join-game">
 		</main>
-		
+
 		<main id="login" hidden>
 			<h2>Who are you?</h2>
 			<input type="text" id="input-text-user-name">

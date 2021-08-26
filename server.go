@@ -31,9 +31,10 @@ type printfer interface {
 }
 
 type gameManager interface {
-	ListGames() []ListedGame
+	ListGames() []*Game
 	CreateGame(string, *Player) *Game
 	AddPlayerToGame(*Player, gameId) error
+	GetGamePlayerView(gameId) (*PlayerViewGame, error)
 }
 
 type playerManager interface {
@@ -106,6 +107,33 @@ func (s *server) postGamesHandler() http.HandlerFunc {
 	}
 }
 
+func (s *server) getGamesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		pathElements := strings.Split(r.URL.Path, "/")
+		if len(pathElements) != 3 {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+		idInt, err := strconv.ParseUint(pathElements[len(pathElements)-1], 10, 64)
+		if err != nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+		g, err := s.gm.GetGamePlayerView(gameId(idInt))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		data, err := json.Marshal(g)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	}
+}
+
 func (s *server) createGameHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -131,7 +159,7 @@ func (s *server) createGameHandler() http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		body, _ := json.Marshal(g.PlayerViewGameState())
+		body, _ := json.Marshal(g)
 		w.Write(body)
 	}
 }

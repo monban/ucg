@@ -17,5 +17,16 @@ func TestAddPlayerToGame(t *testing.T) {
 	gm := newGameManager()
 	game := gm.CreateGame("Test Game", owner)
 	gm.AddPlayerToGame(player, game.id)
-	is.Equal(len(game.PlayerViewGameState().Players), 2)
+	is.Equal(game.PlayerView().PlayerCount, 2)
+}
+
+func TestGetGamePlayerView(t *testing.T) {
+	is := is.New(t)
+	owner := &Player{Name: "First Player"}
+	gm := newGameManager()
+	game := gm.CreateGame("Test Game", owner)
+
+	returnedGame, err := gm.GetGamePlayerView(game.id)
+	is.NoErr(err)
+	is.Equal(returnedGame.Name, game.name)
 }
