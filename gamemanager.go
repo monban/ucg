@@ -33,13 +33,12 @@ func (gm *GameManager) ListGames() []*Game {
 	return list
 }
 
-func (gm *GameManager) GetGamePlayerView(id gameId) (*PlayerViewGame, error) {
+func (gm *GameManager) Get(id gameId) (*Game, error) {
 	game, ok := gm.games[id]
 	if !ok {
 		return nil, fmt.Errorf("Cannot find game with id %d", id)
 	}
-	view := game.PlayerView()
-	return &view, nil
+	return game, nil
 }
 
 func (gm *GameManager) nextGameId() gameId {

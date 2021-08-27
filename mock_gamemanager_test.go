@@ -27,12 +27,12 @@ type MockGameManager struct {
 			Error error
 		}
 	}
-	GetGamePlayerViewCall struct {
+	GetCall struct {
 		Receives struct {
 			id gameId
 		}
 		Returns struct {
-			game *PlayerViewGame
+			game *Game
 			err  error
 		}
 	}
@@ -55,7 +55,7 @@ func (gm *MockGameManager) AddPlayerToGame(p *Player, gid gameId) error {
 	return gm.AddPlayerToGameCall.Returns.Error
 }
 
-func (gm *MockGameManager) GetGamePlayerView(id gameId) (*PlayerViewGame, error) {
-	gm.GetGamePlayerViewCall.Receives.id = id
-	return gm.GetGamePlayerViewCall.Returns.game, gm.GetGamePlayerViewCall.Returns.err
+func (gm *MockGameManager) Get(id gameId) (*Game, error) {
+	gm.GetCall.Receives.id = id
+	return gm.GetCall.Returns.game, gm.GetCall.Returns.err
 }

@@ -134,8 +134,7 @@ func TestGetGame(t *testing.T) {
 	is, _, gm, srv := ServerMocks(t)
 	owner := &Player{}
 	game := NewGame(137, "Super Happy Fun Time!", owner)
-	gameView := game.PlayerView()
-	gm.GetGamePlayerViewCall.Returns.game = &gameView
+	gm.GetCall.Returns.game = game
 
 	uri := fmt.Sprintf("/games/%d", game.id)
 	req := httptest.NewRequest("GET", uri, nil)
@@ -145,7 +144,7 @@ func TestGetGame(t *testing.T) {
 	returnedGame := &PlayerViewGame{}
 	UnmarshalRecorder(rec, returnedGame)
 	is.Equal(rec.Result().Header.Get("Content-Type"), "application/json")
-	is.Equal(gm.GetGamePlayerViewCall.Receives.id, game.id)
+	is.Equal(gm.GetCall.Receives.id, game.id)
 	is.Equal(game.PlayerView(), *returnedGame)
 }
 

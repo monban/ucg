@@ -30,9 +30,9 @@ func TestAddPlayerToGame(t *testing.T) {
 func TestGet(t *testing.T) {
 	is, gm, g := GameManagerMocks(t)
 
-	returnedGame, err := gm.GetGamePlayerView(g.id)
+	returnedGame, err := gm.Get(g.id)
 	is.NoErr(err)
-	is.Equal(returnedGame.Name, g.name)
+	is.Equal(returnedGame.name, g.name)
 }
 
 func GameManagerMocks(t *testing.T) (*is.I, *GameManager, *Game) {

@@ -34,7 +34,7 @@ type gameManager interface {
 	ListGames() []*Game
 	CreateGame(string, *Player) *Game
 	AddPlayerToGame(*Player, gameId) error
-	GetGamePlayerView(gameId) (*PlayerViewGame, error)
+	Get(gameId) (*Game, error)
 }
 
 type playerManager interface {
@@ -119,7 +119,7 @@ func (s *server) getGamesHandler() http.HandlerFunc {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
-		g, err := s.gm.GetGamePlayerView(gameId(idInt))
+		g, err := s.gm.Get(gameId(idInt))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
