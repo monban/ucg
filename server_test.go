@@ -29,7 +29,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestCreateGameWithoutPlayer(t *testing.T) {
-	is, pm, _, srv := StandardMocks(t)
+	is, pm, _, srv := ServerMocks(t)
 
 	// Set up mocks
 	pm.FindPlayerCall.Returns.player = nil
@@ -55,7 +55,7 @@ func TestCreateGameWithoutPlayer(t *testing.T) {
 }
 
 func TestCreateGameWithPlayer(t *testing.T) {
-	is, pm, gm, srv := StandardMocks(t)
+	is, pm, gm, srv := ServerMocks(t)
 
 	// Set up mocks
 	testPlayer := &Player{Name: "TestPlayer"}
@@ -83,7 +83,7 @@ func TestCreateGameWithPlayer(t *testing.T) {
 }
 
 func TestUrlForGame(t *testing.T) {
-	_, _, _, srv := StandardMocks(t)
+	_, _, _, srv := ServerMocks(t)
 	expectedPath := fmt.Sprintf("/games/%d", 1234)
 	u := srv.urlForGame(1234)
 	if u.Path != expectedPath {
@@ -92,7 +92,7 @@ func TestUrlForGame(t *testing.T) {
 }
 
 func TestNewUser(t *testing.T) {
-	is, pm, _, srv := StandardMocks(t)
+	is, pm, _, srv := ServerMocks(t)
 	testPlayer := &Player{Name: "TestPlayer"}
 	pm.FindPlayerCall.Returns.player = testPlayer
 	postData, _ := json.Marshal(testPlayer)
@@ -110,7 +110,7 @@ func TestNewUser(t *testing.T) {
 }
 
 func TestUserCanJoinGame(t *testing.T) {
-	is, pm, gm, srv := StandardMocks(t)
+	is, pm, gm, srv := ServerMocks(t)
 	owner := &Player{Name: "Game Owner", Id: 0}
 	game := &Game{id: 0, name: "Test Game", owner: owner}
 	newPlayer := &Player{Name: "Second Player"}
@@ -131,7 +131,7 @@ func TestUserCanJoinGame(t *testing.T) {
 }
 
 func TestGetGame(t *testing.T) {
-	is, _, gm, srv := StandardMocks(t)
+	is, _, gm, srv := ServerMocks(t)
 	owner := &Player{}
 	game := NewGame(137, "Super Happy Fun Time!", owner)
 	gameView := game.PlayerView()
@@ -149,7 +149,7 @@ func TestGetGame(t *testing.T) {
 	is.Equal(game.PlayerView(), *returnedGame)
 }
 
-func StandardMocks(t *testing.T) (*is.I, *MockPlayerManager, *MockGameManager, *server) {
+func ServerMocks(t *testing.T) (*is.I, *MockPlayerManager, *MockGameManager, *server) {
 	i := is.NewRelaxed(t)
 	lt := &logTesting{t}
 	pm := &MockPlayerManager{}
