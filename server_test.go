@@ -29,10 +29,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestCreateGameWithoutPlayer(t *testing.T) {
-	is := is.New(t)
-	pm := &MockPlayerManager{}
-	gm := &MockGameManager{}
-	srv, _ := newServer(&logTesting{t}, gm, pm)
+	is, pm, _, srv := StandardMocks(t)
 
 	// Set up mocks
 	pm.FindPlayerCall.Returns.player = nil
@@ -58,10 +55,7 @@ func TestCreateGameWithoutPlayer(t *testing.T) {
 }
 
 func TestCreateGameWithPlayer(t *testing.T) {
-	is := is.New(t)
-	pm := &MockPlayerManager{}
-	gm := &MockGameManager{}
-	srv, _ := newServer(&logTesting{t}, gm, pm)
+	is, pm, gm, srv := StandardMocks(t)
 
 	// Set up mocks
 	testPlayer := &Player{Name: "TestPlayer"}
@@ -89,26 +83,23 @@ func TestCreateGameWithPlayer(t *testing.T) {
 }
 
 func TestUrlForGame(t *testing.T) {
-	gm := &MockGameManager{}
-	s, _ := newServer(&logTesting{t}, gm, &PlayerManager{})
+	_, _, _, srv := StandardMocks(t)
 	expectedPath := fmt.Sprintf("/games/%d", 1234)
-	u := s.urlForGame(1234)
+	u := srv.urlForGame(1234)
 	if u.Path != expectedPath {
 		t.Errorf("Expected %v, got %v", expectedPath, u.Path)
 	}
 }
 
 func TestNewUser(t *testing.T) {
-	is := is.New(t)
+	is, pm, _, srv := StandardMocks(t)
 	testPlayer := &Player{Name: "TestPlayer"}
-	pm := &MockPlayerManager{}
 	pm.FindPlayerCall.Returns.player = testPlayer
-	s, _ := newServer(&logTesting{t}, &GameManager{}, pm)
 	postData, _ := json.Marshal(testPlayer)
 	postBytes := bytes.NewBuffer(postData)
 	req := httptest.NewRequest("POST", "/users", postBytes)
 	w := httptest.NewRecorder()
-	s.ServeHTTP(w, req)
+	srv.ServeHTTP(w, req)
 	is.Equal(w.Result().StatusCode, http.StatusCreated)
 	is.Equal(pm.NewPlayerCall.Receives.Name, "TestPlayer")
 	body, _ := io.ReadAll(w.Result().Body)
@@ -119,12 +110,9 @@ func TestNewUser(t *testing.T) {
 }
 
 func TestUserCanJoinGame(t *testing.T) {
-	is := is.New(t)
+	is, pm, gm, srv := StandardMocks(t)
 	owner := &Player{Name: "Game Owner", Id: 0}
 	game := &Game{id: 0, name: "Test Game", owner: owner}
-	pm := &MockPlayerManager{}
-	gm := &MockGameManager{log: &logTesting{t}}
-	srv, _ := newServer(&logTesting{t}, gm, pm)
 	newPlayer := &Player{Name: "Second Player"}
 	pm.FindPlayerCall.Returns.player = newPlayer
 	postData, _ := json.Marshal(struct{ PlayerId PlayerId }{newPlayer.Id})
