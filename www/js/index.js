@@ -13,12 +13,31 @@ function isLoggedIn() {
 
 function bindElements(root) {
 	gameList = root.getElementById('games')
+	root.getElementById('form-login').addEventListener('submit', loginFormSubmit)
+	root.getElementById('form-login').addEventListener('formdata', loginFormData)
 	root.getElementById('refresh-button').addEventListener('click', (evt) => RefreshGameList(gameList))
 	root.getElementById('create-game-button').addEventListener('click', showCreateGameScreen)
 	root.getElementById('exit-new-game').addEventListener('click', showGameList)
 	root.getElementById('input-button-create-game').addEventListener('click', createGame)
-	root.getElementById('input-button-create-user').addEventListener('click', createUser)
 //	root.getElementById('input-button-join-game').addEventListener('click', joinGame)
+}
+
+function loginFormSubmit(evt) {
+	evt.preventDefault()
+	new FormData(evt.target)
+}
+
+function loginFormData(evt) {
+	username = evt.formData.get("userName")
+	fetch('/users', {
+		method: 'POST',
+		body: JSON.stringify({name: username}),
+	}).then(res => res.json())
+		.then((data) => {
+			localStorage.setItem('username', data.name)
+			localStorage.setItem('userid', data.id)
+			showGameList()
+		})
 }
 
 function CreateGameListEntry(game) {
