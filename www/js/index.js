@@ -36,7 +36,6 @@ function CreateGameListEntry(game) {
 				return res.json()
 			throw new Error('Error: ' + res.status)
 		})
-		.then(res => res.json())
 		.then(showGame))
 
 	const name = document.createElement('span')
