@@ -17,18 +17,19 @@ func newGameManager() *GameManager {
 }
 
 func (gm *GameManager) CreateGame(name string, owner *Player) *Game {
-	g := NewGame(gm.nextGameId(), name, owner)
-	gm.games[0] = g
+	id := gm.nextGameId()
+	g := NewGame(id, name, owner)
+	gm.games[id] = g
 	return g
 }
 
-func (gm *GameManager) ListGames() []*Game {
+func (gm *GameManager) List() []*Game {
 	n := len(gm.games)
-	list := make([]*Game, 0, n)
+	list := make([]*Game, n, n)
 	i := 0
 	for _, g := range gm.games {
-		i++
 		list[i] = g
+		i++
 	}
 	return list
 }

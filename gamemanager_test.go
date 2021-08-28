@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/matryer/is"
@@ -33,6 +34,24 @@ func TestGet(t *testing.T) {
 	returnedGame, err := gm.Get(g.id)
 	is.NoErr(err)
 	is.Equal(returnedGame.name, g.name)
+}
+
+func TestList(t *testing.T) {
+	is, gm, g := GameManagerMocks(t)
+	p2 := &Player{}
+	g2 := gm.CreateGame("Second Game", p2)
+	expectedList := []gameId{g.id, g2.id}
+	gameList := gm.List()
+	t.Logf("Game list: %+v", gameList)
+	l := len(gameList)
+	idList := make([]gameId, 0, l)
+	is.Equal(len(gameList), len(expectedList))
+
+	for _, game := range gameList {
+		idList = append(idList, game.id)
+	}
+	sort.Slice(idList, func(i, j int) bool { return idList[i] < idList[j] })
+	is.Equal(expectedList, idList)
 }
 
 func GameManagerMocks(t *testing.T) (*is.I, *GameManager, *Game) {

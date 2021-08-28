@@ -1,8 +1,8 @@
 package main
 
 type MockGameManager struct {
-	log           printfer
-	ListGamesCall struct {
+	log      printfer
+	ListCall struct {
 		Receives struct {
 		}
 		Returns struct {
@@ -38,8 +38,8 @@ type MockGameManager struct {
 	}
 }
 
-func (gm *MockGameManager) ListGames() []*Game {
-	return gm.ListGamesCall.Returns.Games
+func (gm *MockGameManager) List() []*Game {
+	return gm.ListCall.Returns.Games
 }
 
 func (gm *MockGameManager) CreateGame(name string, owner *Player) *Game {

@@ -31,7 +31,7 @@ type printfer interface {
 }
 
 type gameManager interface {
-	ListGames() []*Game
+	List() []*Game
 	CreateGame(string, *Player) *Game
 	AddPlayerToGame(*Player, gameId) error
 	Get(gameId) (*Game, error)
@@ -73,7 +73,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) getGames() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := json.Marshal(s.gm.ListGames())
+		data, err := json.Marshal(s.gm.List())
 		if err != nil {
 			http.Error(w, "Error marshaling games", http.StatusInternalServerError)
 			return
