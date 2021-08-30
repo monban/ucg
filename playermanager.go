@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 const maxPlayerId PlayerId = ^PlayerId(0)
 
@@ -28,13 +31,13 @@ func (pm *PlayerManager) FindPlayer(id PlayerId) (*Player, error) {
 }
 
 func (pm *PlayerManager) NewPlayer(name string) *Player {
+	var ok bool = true
 	var nextId PlayerId
-	for nextId = 0; nextId < maxPlayerId; nextId++ {
-		if pm.players[nextId] == nil {
-			newPlayer := &Player{Id: nextId, Name: name}
-			pm.players[nextId] = newPlayer
-			return newPlayer
-		}
+	for ok {
+		nextId = PlayerId(rand.Uint64())
+		_, ok = pm.players[nextId]
 	}
-	panic("Out of game ids!")
+	newPlayer := &Player{Id: nextId, Name: name}
+	pm.players[nextId] = newPlayer
+	return newPlayer
 }
