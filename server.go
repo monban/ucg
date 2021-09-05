@@ -172,9 +172,10 @@ func (s *server) newUser() http.HandlerFunc {
 		}
 		body, _ := io.ReadAll(r.Body)
 		s.log.Printf("%v", string(body))
-		pd := Player{}
+		pd := struct{ Name string }{}
 		err := json.Unmarshal(body, &pd)
 		if err != nil {
+			s.log.Printf("Unable to create player with data: %+v, error: %v", string(body), err.Error())
 			http.Error(w, "Invalid format", http.StatusBadRequest)
 			return
 		}
