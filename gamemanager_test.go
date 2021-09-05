@@ -9,7 +9,7 @@ import (
 
 func TestCreateGame(t *testing.T) {
 	is := is.New(t)
-	gm := newGameManager()
+	gm := NewGameManager()
 	p := &Player{}
 	g := gm.CreateGame("Test Game", p)
 	is.True(g != nil)
@@ -57,7 +57,7 @@ func TestList(t *testing.T) {
 func GameManagerMocks(t *testing.T) (*is.I, *GameManager, *Game) {
 	i := is.New(t)
 	owner := &Player{Name: "Game Owner"}
-	gm := newGameManager()
+	gm := NewGameManager()
 	game := gm.CreateGame("Test Game", owner)
 	return i, gm, game
 }

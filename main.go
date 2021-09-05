@@ -15,7 +15,7 @@ func main() {
 }
 
 func runServer() error {
-	gm := newGameManager()
+	gm := NewGameManager()
 	pm := newPlayerManager()
 	l := log.Default()
 	s, _ := newServer(l, gm, pm)
