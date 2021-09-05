@@ -13,35 +13,50 @@ function isLoggedIn() {
 
 function bindElements(root) {
   gameList = root.getElementById('games')
-  root.getElementById('form-login').addEventListener('submit', loginFormSubmit)
+  root.getElementById('form-login').addEventListener('submit', xhrFormSubmit)
   root.getElementById('form-login').addEventListener('formdata', loginFormData)
+
+  root.getElementById('form-game-create').addEventListener('submit', xhrFormSubmit)
+  root.getElementById('form-game-create').addEventListener('formdata', createGameData)
+
   root.getElementById('refresh-button').addEventListener('click', () => RefreshGameList(gameList))
   root.getElementById('create-game-button').addEventListener('click', showCreateGameScreen)
   root.getElementById('exit-new-game').addEventListener('click', showGameList)
-  root.getElementById('input-button-create-game').addEventListener('click', createGame)
 }
 
-function loginFormSubmit(evt) {
-  console.log(evt)
+function xhrFormSubmit(evt) {
   evt.preventDefault()
   new FormData(evt.target)
 }
 
 function loginFormData(evt) {
-  console.log(evt)
   username = evt.formData.get("userName")
   fetch('/users', {
     method: 'POST',
     body: JSON.stringify({ name: username }),
   }).then(res => res.json())
-    .then((data) => {
+    .then(data => {
       localStorage.setItem('username', data.name)
       localStorage.setItem('userid', data.id)
       showGameList()
     })
-    .catch((err) => {
-      console.log("Error logging in:", err)
-    })
+    .catch(err => { console.warn(err) })
+}
+
+function createGameData(evt) {
+  gameData = {
+    name: evt.formData.get('gameName')
+  }
+  fetch('/games', {
+    method: 'POST',
+    body: JSON.stringify(gameData),
+    headers: {
+      'X-Player-Id': localStorage.getItem('userid'),
+    }
+  })
+    .then(res => res.json())
+    .then(data => { console.log(data) })
+    .catch(err => { console.warn(err) })
 }
 
 function CreateGameListEntry(game) {
