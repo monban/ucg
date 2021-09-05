@@ -30,7 +30,7 @@ function xhrFormSubmit(evt) {
 }
 
 function loginFormData(evt) {
-  username = evt.formData.get("userName")
+  username = evt.formData.get('userName')
   fetch('/users', {
     method: 'POST',
     body: JSON.stringify({ name: username }),
@@ -74,7 +74,9 @@ function CreateGameListEntry(game) {
         return res.json()
       throw new Error('Error: ' + res.status)
     })
-    .then(showGame))
+    .then(showGame)
+    .catch(err => { console.warn(err) })
+  )
 
   const name = document.createElement('span')
   name.setAttribute('class', 'game-name')
@@ -100,6 +102,7 @@ function RefreshGameList(gl) {
         .map(CreateGameListEntry)
         .forEach(item => gl.append(item))
     })
+    .catch(err => { console.warn(err) })
 }
 
 function hideAllMainsExcept(id) {
@@ -119,7 +122,7 @@ function showGameList() {
 
 function createGame() {
   newGameData = {
-    name: document.getElementById("input-text-game-name").value
+    name: document.getElementById('input-text-game-name').value
   }
   fetch('/games', {
     method: 'POST',
@@ -129,6 +132,7 @@ function createGame() {
     body: JSON.stringify(newGameData),
   }).then(res => res.json())
     .then(data => showGame(data))
+    .catch(err => { console.warn(err) })
 }
 
 function showGame(data) {
@@ -148,7 +152,7 @@ function updateGameDisplay(data) {
 
 function createUser() {
   userData = {
-    name: document.getElementById("input-text-user-name").value
+    name: document.getElementById('input-text-user-name').value
   }
   fetch('/users', {
     method: 'POST',
@@ -159,6 +163,7 @@ function createUser() {
       localStorage.setItem('userid', data.id)
       showGameList()
     })
+    .catch(err => { console.warn(err) })
 }
 
 
