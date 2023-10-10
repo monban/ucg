@@ -1,7 +1,7 @@
 package main
 
 type MockGameManager struct {
-	log      printfer
+	log      logger
 	ListCall struct {
 		Receives struct {
 		}

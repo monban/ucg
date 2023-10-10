@@ -4,17 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 )
 
 type server struct {
 	router      router
-	log         printfer
+	log         logger
 	gm          gameManager
 	pm          playerManager
 	rootHandler http.Handler
@@ -26,8 +25,10 @@ type router interface {
 	HandleFunc(string, string, func(http.ResponseWriter, *http.Request))
 }
 
-type printfer interface {
+type logger interface {
 	Printf(string, ...interface{})
+	Info(any, ...any)
+	Error(any, ...any)
 }
 
 type gameManager interface {
@@ -42,8 +43,8 @@ type playerManager interface {
 	NewPlayer(string) *Player
 }
 
-func newServer(l printfer, gm gameManager, pm playerManager) (*server, error) {
-	l.Printf("Setting up new server")
+func newServer(l logger, gm gameManager, pm playerManager) (*server, error) {
+	l.Info("Setting up new server")
 	s := &server{
 		router:      &methodRouter{},
 		log:         l,
@@ -57,7 +58,7 @@ func newServer(l printfer, gm gameManager, pm playerManager) (*server, error) {
 
 func (s *server) handleRoot() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		i, err := ioutil.ReadFile("index.html")
+		i, err := os.ReadFile("index.html")
 		if err != nil {
 			http.NotFound(w, r)
 			return
@@ -67,7 +68,7 @@ func (s *server) handleRoot() http.HandlerFunc {
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.log.Printf("%v %v %v%v", r.Proto, r.Method, r.Host, r.URL)
+	s.log.Info("request", "protocol", r.Proto, "method", r.Method, "host", r.Host, "uri", r.URL)
 	s.router.ServeHTTP(w, r)
 }
 
@@ -75,6 +76,7 @@ func (s *server) getGames() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := json.Marshal(s.gm.List())
 		if err != nil {
+			s.log.Error("Error marshaling games", "err", err)
 			http.Error(w, "Error marshaling games", http.StatusInternalServerError)
 			return
 		}
@@ -87,16 +89,16 @@ func (s *server) postGamesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		player, err := PlayerFromReq(r, s.pm)
 		if err != nil {
-			s.log.Printf(err.Error())
+			s.log.Error("Error reading body", "err", err.Error())
 			http.Error(w, "Error occured reading body", http.StatusBadRequest)
 			return
 		}
 		pathElements := strings.Split(r.URL.Path, "/")
-		s.log.Printf("Last element of path is %v", pathElements[len(pathElements)-1])
+		s.log.Info("Last element of path is %v", pathElements[len(pathElements)-1])
 		if pathElements[len(pathElements)-1] == "join" {
 			gidint, err := strconv.ParseUint(pathElements[len(pathElements)-2], 10, 64)
 			if err != nil {
-				s.log.Printf(err.Error())
+				s.log.Error("parsing game id", "err", err)
 				http.Error(w, "Error occured parsing game id", http.StatusBadRequest)
 			}
 			s.gm.AddPlayerToGame(player, gameId(gidint))
@@ -136,51 +138,44 @@ func (s *server) getGamesHandler() http.HandlerFunc {
 
 func (s *server) createGameHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var err error
-		p, err := PlayerFromReq(r, s.pm)
-		if err != nil {
-			s.log.Printf(err.Error())
-			http.Error(w, "Unable to create game with this user", http.StatusBadRequest)
-			return
-		}
-		postData, _ := io.ReadAll(r.Body)
-		var jd newGameData
-		err = json.Unmarshal(postData, &jd)
-		if err != nil {
-			log.Printf("ERROR: failed to unmarshal postData: %v", err.Error())
-			http.Error(w, "Unable to create game with provided data", http.StatusBadRequest)
-			return
-		}
-		s.log.Printf("%v creating new game: %v\n", p, jd)
-		g := s.gm.CreateGame(jd.Name, p)
-		if g == nil {
-			http.Error(w, "Unable to create game", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		body, _ := json.Marshal(g)
-		w.Write(body)
+		// 	var err error
+		// 	p, err := PlayerFromReq(r, s.pm)
+		// 	if err != nil {
+		// 		s.log.Error("PlayerFromReq", "err", err)
+		// 		http.Error(w, "Unable to create game with this user", http.StatusBadRequest)
+		// 		return
+		// 	}
+		// 	postData, _ := io.ReadAll(r.Body)
+		// 	var jd newGameData
+		// 	err = json.Unmarshal(postData, &jd)
+		// 	if err != nil {
+		// 		s.log.Error("ERROR: failed to unmarshal postData", "err", err)
+		// 		http.Error(w, "Unable to create game with provided data", http.StatusBadRequest)
+		// 		return
+		// 	}
+		// s.log.Info("creating new game: %v\n", "player", p, "gameData", jd)
+		// g := s.gm.CreateGame(jd.Name, p)
+		// if g == nil {
+		// 	http.Error(w, "Unable to create game", http.StatusInternalServerError)
+		// 	return
+		// }
+		// w.Header().Set("Content-Type", "application/json")
+		// w.WriteHeader(http.StatusCreated)
+		// body, _ := json.Marshal(g)
+		// w.Write(body)
 	}
 }
 
 func (s *server) newUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "You can only POST to this endpoint", http.StatusMethodNotAllowed)
-			return
-		}
-		body, _ := io.ReadAll(r.Body)
-		s.log.Printf("%v", string(body))
-		pd := struct{ Name string }{}
-		err := json.Unmarshal(body, &pd)
+		err := r.ParseForm()
 		if err != nil {
-			s.log.Printf("Unable to create player with data: %+v, error: %v", string(body), err.Error())
-			http.Error(w, "Invalid format", http.StatusBadRequest)
-			return
+			s.log.Error("Unable to parse form", "err", err)
 		}
-		p := s.pm.NewPlayer(pd.Name)
-		s.log.Printf("Creating new player: %v(%d)", p.Name, p.Id)
+		data := r.PostForm
+		s.log.Info("newUser", "data", data)
+		p := s.pm.NewPlayer(data.Get("name"))
+		s.log.Info("Creating new player", "name", p.Name, "id", p.Id)
 		rbody, _ := json.Marshal(p)
 		w.WriteHeader(http.StatusCreated)
 		w.Write(rbody)
@@ -212,11 +207,11 @@ func PlayerFromReq(r *http.Request, pm playerManager) (*Player, error) {
 	pidstring := r.Header.Get("X-Player-Id")
 	pidint, err := strconv.ParseUint(pidstring, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to parse uint from string ''%s': %w", pidstring, err)
 	}
 	player, err := pm.FindPlayer(PlayerId(pidint))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to find player with pid %d: %w", pidint, err)
 	}
 	return player, nil
 }

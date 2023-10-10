@@ -1,46 +1,42 @@
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>Untitled Card Game</title>
-    <link rel="stylesheet" href="/css/index.css">
-    <link rel="license" href="https://www.gnu.org/licenses/agpl-3.0.en.html">
-  </head>
-  <body>
-    <script src="/js/index.js" defer></script>
-    <main id="game-list" hidden>
-      <h2>Games</h2>
-      <img src="/img/4213447-arrow-load-loading-refresh-reload-restart-sync_115423.svg" alt="refresh" width=24 id="refresh-button">
-      <ul id="games"></ul>
-      <input type="button" value="Create Game" id="create-game-button">
-    </main>
 
-    <main id="new-game" hidden>
-      <h2>Create Game</h2>
-      <form id="form-game-create">
-        <p>
-          <label for="input-game-name">Name</label>
-          <input name="gameName" type="text" id="input-text-game-name">
-        </p>
-        <button>Create Game</button>
-      </form>
-      <input type="button" value="Exit" id="exit-new-game">
-    </main>
+<head>
+  <title>Untitled Card Game</title>
+  <link rel="stylesheet" href="/css/index.css">
+  <link rel="license" href="https://www.gnu.org/licenses/agpl-3.0.en.html">
+  <script src="https://unpkg.com/htmx.org@1.9.6"
+    integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
+    crossorigin="anonymous"></script>
+</head>
 
-    <main id="game" hidden>
-    </main>
+<body hx-boot="true">
+  <main id="game-list">
+    <h2>Games</h2>
+    <img src="/img/4213447-arrow-load-loading-refresh-reload-restart-sync_115423.svg" alt="refresh" width=24
+      id="refresh-button">
+    <ul id="games"></ul>
+    <a href="/games/new.html">Create Game</a>
+  </main>
 
-    <main id="game-preview" hidden>
-      <h2 id="game-name"></h2>
-      <ul id="game-players"></ul>
-      <input type="button" value="Join" id="input-button-join-game">
-      <input type="button">
-    </main>
 
-    <main id="login" hidden>
-      <h2>Who are you?</h2>
-      <form id="form-login">
-        <input type="text" name="userName">
-        <button>Okay</button>
-      </form>
-    </main>
-  </body>
+  <main id="game" hidden>
+  </main>
+
+  <main id="game-preview" hidden>
+    <h2 id="game-name"></h2>
+    <ul id="game-players"></ul>
+    <input type="button" value="Join" id="input-button-join-game">
+    <input type="button">
+  </main>
+
+  <main id="login" hidden>
+    <h2>Who are you?</h2>
+    <form id="form-login">
+      <input type="text" name="userName">
+      <button>Okay</button>
+    </form>
+  </main>
+</body>
+
 </html>
