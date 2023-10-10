@@ -168,18 +168,26 @@ func (s *server) createGameHandler() http.HandlerFunc {
 
 func (s *server) newUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			s.log.Error("Unable to parse form", "err", err)
+		name := r.PostFormValue("name")
+		if name == "" {
+			s.log.Error("newUser with empty name")
+			http.Error(w, "name is required", http.StatusBadRequest)
+			return
 		}
-		data := r.PostForm
-		s.log.Info("newUser", "data", data)
-		p := s.pm.NewPlayer(data.Get("name"))
+		p := s.pm.NewPlayer(r.PostFormValue("name"))
 		s.log.Info("Creating new player", "name", p.Name, "id", p.Id)
 		rbody, _ := json.Marshal(p)
 		w.WriteHeader(http.StatusCreated)
 		w.Write(rbody)
 	}
+}
+
+func valuesToString(u url.Values) string {
+	b := &strings.Builder{}
+	for k, v := range u {
+		fmt.Fprintf(b, "%s=>%s ", k, v)
+	}
+	return b.String()
 }
 
 func (s *server) urlForGame(id gameId) url.URL {
