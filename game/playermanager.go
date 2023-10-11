@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ type PlayerManager struct {
 	players map[PlayerId]*Player
 }
 
-func newPlayerManager() *PlayerManager {
+func NewPlayerManager() *PlayerManager {
 	return &PlayerManager{
 		players: make(map[PlayerId]*Player, 100),
 	}

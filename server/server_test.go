@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -24,7 +24,7 @@ func (lt logTesting) Printf(a string, b ...interface{}) {
 func TestNewServer(t *testing.T) {
 	is := is.New(t)
 	lt := logTesting{t: t}
-	_, err := newServer(lt, &GameManager{}, &PlayerManager{})
+	_, err := New(lt, &GameManager{}, &PlayerManager{})
 	is.NoErr(err)
 }
 
@@ -153,7 +153,7 @@ func ServerMocks(t *testing.T) (*is.I, *MockPlayerManager, *MockGameManager, *se
 	lt := &logTesting{t}
 	pm := &MockPlayerManager{}
 	gm := &MockGameManager{log: lt}
-	srv, _ := newServer(lt, gm, pm)
+	srv, _ := New(lt, gm, pm)
 	return i, pm, gm, srv
 }
 

@@ -1,4 +1,4 @@
-package main
+package game
 
 import "encoding/json"
 
@@ -6,7 +6,7 @@ type Game struct {
 	players []*Player
 	rounds  []*Round
 	name    string
-	id      gameId
+	id      GameId
 	owner   *Player
 }
 
@@ -15,10 +15,10 @@ type PlayerViewGame struct {
 	PlayerCount int      `json:"playerCount"`
 	PlayerNames []string `json:"playerNames"`
 	Owner       string   `json:"owner"`
-	Id          gameId   `json:"id"`
+	Id          GameId   `json:"id"`
 }
 
-func NewGame(id gameId, n string, owner *Player) *Game {
+func NewGame(id GameId, n string, owner *Player) *Game {
 	return &Game{
 		players: make([]*Player, 0),
 		rounds:  make([]*Round, 0),

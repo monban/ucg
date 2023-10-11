@@ -1,4 +1,4 @@
-package main
+package game
 
 type MockGameManager struct {
 	log      logger
@@ -21,7 +21,7 @@ type MockGameManager struct {
 	AddPlayerToGameCall struct {
 		Receives struct {
 			p   *Player
-			gid gameId
+			gid GameId
 		}
 		Returns struct {
 			Error error
@@ -29,7 +29,7 @@ type MockGameManager struct {
 	}
 	GetCall struct {
 		Receives struct {
-			id gameId
+			id GameId
 		}
 		Returns struct {
 			game *Game
@@ -48,14 +48,14 @@ func (gm *MockGameManager) CreateGame(name string, owner *Player) *Game {
 	return gm.CreateGameCall.Returns.Game
 }
 
-func (gm *MockGameManager) AddPlayerToGame(p *Player, gid gameId) error {
+func (gm *MockGameManager) AddPlayerToGame(p *Player, gid GameId) error {
 	gm.log.Printf("Adding player %+v to game with id %d", p, gid)
 	gm.AddPlayerToGameCall.Receives.p = p
 	gm.AddPlayerToGameCall.Receives.gid = gid
 	return gm.AddPlayerToGameCall.Returns.Error
 }
 
-func (gm *MockGameManager) Get(id gameId) (*Game, error) {
+func (gm *MockGameManager) Get(id GameId) (*Game, error) {
 	gm.GetCall.Receives.id = id
 	return gm.GetCall.Returns.game, gm.GetCall.Returns.err
 }

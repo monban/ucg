@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/charmbracelet/log"
 	"net/http"
 	"os"
+
+	"github.com/charmbracelet/log"
+	"github.com/monban/ucg/game"
+	"github.com/monban/ucg/server"
 )
 
 func main() {
@@ -15,9 +18,9 @@ func main() {
 }
 
 func runServer() error {
-	gm := NewGameManager()
-	pm := newPlayerManager()
+	gm := game.NewGameManager()
+	pm := game.NewPlayerManager()
 	l := log.Default()
-	s, _ := newServer(l, gm, pm)
+	s, _ := server.New(l, gm, pm)
 	return http.ListenAndServe(":8080", s)
 }

@@ -1,18 +1,18 @@
-package main
+package game
 
 import "fmt"
 
-const maxGameId gameId = ^gameId(0)
+const maxGameId GameId = ^GameId(0)
 
-type gameId uint64
+type GameId uint64
 
 type GameManager struct {
-	games map[gameId]*Game
+	games map[GameId]*Game
 }
 
 func NewGameManager() *GameManager {
 	return &GameManager{
-		games: make(map[gameId]*Game, 100),
+		games: make(map[GameId]*Game, 100),
 	}
 }
 
@@ -35,7 +35,7 @@ func (gm *GameManager) List() []*Game {
 	return list
 }
 
-func (gm *GameManager) Get(id gameId) (*Game, error) {
+func (gm *GameManager) Get(id GameId) (*Game, error) {
 	game, ok := gm.games[id]
 	if !ok {
 		return nil, fmt.Errorf("Cannot find game with id %d", id)
@@ -43,8 +43,8 @@ func (gm *GameManager) Get(id gameId) (*Game, error) {
 	return game, nil
 }
 
-func (gm *GameManager) nextGameId() gameId {
-	var nextId gameId
+func (gm *GameManager) nextGameId() GameId {
+	var nextId GameId
 	for nextId = 0; nextId < maxGameId; nextId++ {
 		if gm.games[nextId] == nil {
 			return nextId
@@ -53,7 +53,7 @@ func (gm *GameManager) nextGameId() gameId {
 	panic("Out of game ids!")
 }
 
-func (gm *GameManager) AddPlayerToGame(p *Player, gid gameId) error {
+func (gm *GameManager) AddPlayerToGame(p *Player, gid GameId) error {
 	game, ok := gm.games[gid]
 	if !ok {
 		return fmt.Errorf("Game with id %v not found", gid)

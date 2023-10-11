@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 
 func TestCreateUser(t *testing.T) {
 	is := is.New(t)
-	pm := newPlayerManager()
+	pm := NewPlayerManager()
 	p := pm.NewPlayer("Bob")
 	ret, err := pm.FindPlayer(p.Id)
 	is.NoErr(err)
@@ -17,7 +17,7 @@ func TestCreateUser(t *testing.T) {
 
 func TestPlayerIdNotPredictable(t *testing.T) {
 	is := is.New(t)
-	pm := newPlayerManager()
+	pm := NewPlayerManager()
 	p := pm.NewPlayer("Test Player")
 	t.Logf("New player id is %d", p.Id)
 	is.True(p.Id != 0)
@@ -25,7 +25,7 @@ func TestPlayerIdNotPredictable(t *testing.T) {
 
 func TestFindPlayer_missing(t *testing.T) {
 	is := is.New(t)
-	pm := newPlayerManager()
+	pm := NewPlayerManager()
 	p, err := pm.FindPlayer(1234)
 	is.True(err != nil)
 	is.True(p == nil)
@@ -33,7 +33,7 @@ func TestFindPlayer_missing(t *testing.T) {
 
 func TestFindPlayer_extant(t *testing.T) {
 	is := is.New(t)
-	pm := newPlayerManager()
+	pm := NewPlayerManager()
 	p := pm.NewPlayer("Test Player")
 	p, err := pm.FindPlayer(p.Id)
 	is.NoErr(err)

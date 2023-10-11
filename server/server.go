@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/monban/ucg/game"
 )
 
 type server struct {
@@ -32,18 +34,18 @@ type logger interface {
 }
 
 type gameManager interface {
-	List() []*Game
-	CreateGame(string, *Player) *Game
-	AddPlayerToGame(*Player, gameId) error
-	Get(gameId) (*Game, error)
+	List() []*game.Game
+	CreateGame(string, *game.Player) *game.Game
+	AddPlayerToGame(*game.Player, game.GameId) error
+	Get(game.GameId) (*game.Game, error)
 }
 
 type playerManager interface {
-	FindPlayer(PlayerId) (*Player, error)
-	NewPlayer(string) *Player
+	FindPlayer(game.PlayerId) (*game.Player, error)
+	NewPlayer(string) *game.Player
 }
 
-func newServer(l logger, gm gameManager, pm playerManager) (*server, error) {
+func New(l logger, gm gameManager, pm playerManager) (*server, error) {
 	l.Info("Setting up new server")
 	s := &server{
 		router:      &methodRouter{},
@@ -101,7 +103,7 @@ func (s *server) postGamesHandler() http.HandlerFunc {
 				s.log.Error("parsing game id", "err", err)
 				http.Error(w, "Error occured parsing game id", http.StatusBadRequest)
 			}
-			s.gm.AddPlayerToGame(player, gameId(gidint))
+			s.gm.AddPlayerToGame(player, game.GameId(gidint))
 			w.WriteHeader(http.StatusNoContent)
 
 			return
@@ -121,7 +123,7 @@ func (s *server) getGamesHandler() http.HandlerFunc {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
-		g, err := s.gm.Get(gameId(idInt))
+		g, err := s.gm.Get(game.GameId(idInt))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -190,7 +192,7 @@ func valuesToString(u url.Values) string {
 	return b.String()
 }
 
-func (s *server) urlForGame(id gameId) url.URL {
+func (s *server) urlForGame(id game.GameId) url.URL {
 	// TODO: Check game with id exists
 	p := fmt.Sprintf("/games/%d", id)
 	u := url.URL{}
@@ -211,13 +213,13 @@ func JsonBody(r *http.Request, d interface{}) error {
 	return nil
 }
 
-func PlayerFromReq(r *http.Request, pm playerManager) (*Player, error) {
+func PlayerFromReq(r *http.Request, pm playerManager) (*game.Player, error) {
 	pidstring := r.Header.Get("X-Player-Id")
 	pidint, err := strconv.ParseUint(pidstring, 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse uint from string ''%s': %w", pidstring, err)
 	}
-	player, err := pm.FindPlayer(PlayerId(pidint))
+	player, err := pm.FindPlayer(game.PlayerId(pidint))
 	if err != nil {
 		return nil, fmt.Errorf("unable to find player with pid %d: %w", pidint, err)
 	}

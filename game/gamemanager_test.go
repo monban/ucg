@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"sort"
@@ -40,11 +40,11 @@ func TestList(t *testing.T) {
 	is, gm, g := GameManagerMocks(t)
 	p2 := &Player{}
 	g2 := gm.CreateGame("Second Game", p2)
-	expectedList := []gameId{g.id, g2.id}
+	expectedList := []GameId{g.id, g2.id}
 	gameList := gm.List()
 	t.Logf("Game list: %+v", gameList)
 	l := len(gameList)
-	idList := make([]gameId, 0, l)
+	idList := make([]GameId, 0, l)
 	is.Equal(len(gameList), len(expectedList))
 
 	for _, game := range gameList {
