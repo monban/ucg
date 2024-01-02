@@ -1,0 +1,13 @@
+{{define "body"}}
+  <main id="new-game">
+    <h2>Create Game</h2>
+    <form id="form-game-create" method="post" action="/games">
+      <p>
+        <label for="input-game-name">Name</label>
+        <input name="gameName" type="text" id="input-text-game-name" required>
+      </p>
+      <button>Create Game</button>
+    </form>
+    <input type="button" value="Exit" id="exit-new-game">
+  </main>
+{{end}}

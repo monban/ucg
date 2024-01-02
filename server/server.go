@@ -6,9 +6,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/monban/ucg/game"
 )
@@ -19,6 +19,7 @@ type server struct {
 	gm          gameManager
 	pm          playerManager
 	rootHandler http.Handler
+	template    *template.Template
 }
 
 type router interface {
@@ -46,26 +47,33 @@ type playerManager interface {
 }
 
 func New(l logger, gm gameManager, pm playerManager) (*server, error) {
-	l.Info("Setting up new server")
 	s := &server{
-		router:      &methodRouter{},
-		log:         l,
-		gm:          gm,
-		rootHandler: http.FileServer(http.Dir("www")),
-		pm:          pm,
+		router:   &methodRouter{},
+		log:      l,
+		gm:       gm,
+		pm:       pm,
+		template: template.Must(template.ParseFiles("templates/main.html.tmpl")),
 	}
+	s.rootHandler = s.handleRoot()
 	s.routes()
 	return s, nil
 }
 
 func (s *server) handleRoot() http.HandlerFunc {
+	t := template.Must(s.template.Clone())
+	template.Must(t.ParseFiles("templates/index.html.tmpl"))
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		i, err := os.ReadFile("index.html")
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		fmt.Fprint(w, string(i))
+		t.Execute(w, "n/a")
+	}
+}
+
+func (s *server) newGameHandler() http.HandlerFunc {
+	t := template.Must(s.template.Clone())
+	template.Must(t.ParseFiles("templates/games/new.html.tmpl"))
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		t.Execute(w, "n/a")
 	}
 }
 
@@ -75,15 +83,11 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) getGames() http.HandlerFunc {
+	t := template.Must(s.template.Clone())
+	template.Must(t.ParseFiles("templates/games/index.html.tmpl"))
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := json.Marshal(s.gm.List())
-		if err != nil {
-			s.log.Error("Error marshaling games", "err", err)
-			http.Error(w, "Error marshaling games", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(data))
+		s.template.Execute(w, s.gm.List())
 	}
 }
 

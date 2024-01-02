@@ -166,4 +166,18 @@ function createUser() {
     .catch(err => { console.warn(err) })
 }
 
+function previewGame(id) {
+  hideAllMainsExcept('game-preview')
+  fetch(`/games/${id}`, {
+    headers: {
+      'Accept': 'application/json',
+    },
+  })
+    .then(res => res.json())
+    .then(json => {
+      document.getElementById('game-name').innerText = json.name
+      document.getElementById('game-players').innerText = json.players
+    })
+    .catch(err => console.warn(err))
+}
 
